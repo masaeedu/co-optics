@@ -1,6 +1,7 @@
 module Filterable where
 
 import Data.Bifunctor (first, second)
+import Data.Map.Strict (Map, foldrWithKey, empty, insert)
 
 class Functor f => Filterable f
   where
@@ -17,3 +18,7 @@ instance Filterable Maybe
   partition Nothing = (Nothing, Nothing)
   partition (Just (Left a)) = (Just a, Nothing)
   partition (Just (Right b)) = (Nothing, Just b)
+
+instance Ord k => Filterable (Map k)
+  where
+  partition = foldrWithKey (\k -> either (first . insert k) (second . insert k)) (empty, empty)
