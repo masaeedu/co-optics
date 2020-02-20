@@ -49,12 +49,8 @@ _whole = prism b m
     let r = round f
     in if fromIntegral r == f then Right r else Left f
 
--- We want to work dangerously in the domain of real numbers
-divby2 :: Kleisli Maybe Double Double
-divby2 = arr (/ 2)
-
 main :: IO ()
 main = do
-  -- Since our arrow supports failure, we can work with input that lives in the domain of integers
-  print $ runKleisli (re _whole divby2) $ 2
-  print $ runKleisli (re _whole divby2) $ 3
+  -- Since our arrow supports failure, we can work with integers as if they were doubles
+  print $ runKleisli @Maybe (re _whole $ arr (/ 2)) $ 2
+  print $ runKleisli @Maybe (re _whole $ arr (/ 2)) $ 3
