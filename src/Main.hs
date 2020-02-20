@@ -33,12 +33,13 @@ main = do
   print $ speculate i2r (Just . (/ 2)) $ 3 -- Nothing
 
   -- Nonsense example where we find the factors of a number by just performing floating
-  -- point division with prime factors, discarding anything that doesn't end up being
-  -- an integer. Works because @Map Int@ is filterable
+  -- point division with prime factors
   let
     quotients :: Double -> Map Int Double
     quotients x = fromList [(1, x / 1), (2, x / 2), (3, x / 3), (5, x / 5)]
 
+  -- Because a @Map@ is filterable, we can focus onto the integer results, discarding
+  -- anything that didn't divide cleanly
   print $ speculate i2r quotients $ 15 -- fromList [(1, 15), (3, 5), (5, 3)]
 
   -- Another, slightly stupider notion of "arrow" is one with no input
