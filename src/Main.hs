@@ -20,10 +20,10 @@ r2i = prism b m
 i2r :: Coprism' Int Double
 i2r = re r2i
 
-double :: Iso' Double Double
+double :: Fractional n => Iso' n n
 double = dimap (/ 2) (* 2)
 
-halve :: Iso' Double Double
+halve :: Fractional n => Iso' n n
 halve = re double
 
 main :: IO ()
