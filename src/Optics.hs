@@ -1,13 +1,15 @@
-{-# LANGUAGE TupleSections #-}
-
 module Optics where
 
 import Data.Profunctor (Profunctor(..), Strong(..), Costrong(..), Choice(..), Cochoice(..))
 import Data.Bifunctor (first, second)
+import Data.Bifunctor.Joker (Joker(..))
 import Control.Applicative (liftA2)
 
 import Decisive
+import Filterable
+import Profunctor.Joker ()
 import Profunctor.Re
+import Profunctor.Kleisli
 
 type Optic p  s t a b = p a b -> p s t
 
@@ -119,3 +121,10 @@ liftPrism p = prism (fmap $ build p) (decide . fmap (match p))
 -- Reversals
 re :: Optic (Re p a b) s t a b -> Optic p b a t s
 re p = runRe $ p $ Re id
+
+-- Coprisms
+whittle :: Filterable f => Coprism s t a b -> f b -> f t
+whittle p f = runJoker $ p $ Joker $ f
+
+speculate :: Filterable f => Coprism s t a b -> (a -> f b) -> s -> f t
+speculate = dimap Kleisli runKleisli

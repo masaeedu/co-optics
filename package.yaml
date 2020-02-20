@@ -39,6 +39,8 @@ default-extensions:
   - FlexibleContexts
   - DefaultSignatures
 
+  - TupleSections
+
 library: {}
 executable:
   main: Main.hs

@@ -1,9 +1,23 @@
 module Profunctor.Kleisli where
 
-import Control.Arrow (Kleisli(..))
-import Control.Applicative (Alternative(..))
-import Data.Profunctor (Cochoice(..))
+import Data.Profunctor (Profunctor (..), Strong(..), Choice(..), Cochoice(..))
 
-instance (Monad m, Alternative m) => Cochoice (Kleisli m)
+import Filterable
+
+newtype Kleisli m a b = Kleisli { runKleisli :: a -> m b }
+
+instance Functor m => Profunctor (Kleisli m)
   where
-  unleft (Kleisli amb) = Kleisli $ \a -> amb (Left a) >>= either pure (const empty)
+  dimap f g (Kleisli amb) = Kleisli $ fmap g . amb . f
+
+instance Functor f => Strong (Kleisli f)
+  where
+  first' (Kleisli amb) = Kleisli $ \(a, c) -> fmap (, c) $ amb a
+
+instance Applicative f => Choice (Kleisli f)
+  where
+  left' (Kleisli amb) = Kleisli $ either (fmap Left . amb) (fmap Right . pure)
+
+instance Filterable m => Cochoice (Kleisli m)
+  where
+  unleft (Kleisli amb) = Kleisli $ \a -> fst $ partition $ amb (Left a)
