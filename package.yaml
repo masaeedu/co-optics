@@ -10,6 +10,7 @@ source-dirs: src
 dependencies:
   - { name: "base", version: ">=4.12 && <4.13" }
   - profunctors
+  - bifunctors
 
 ghc-options: -Wall
 default-extensions:
