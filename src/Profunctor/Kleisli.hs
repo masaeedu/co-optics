@@ -20,4 +20,4 @@ instance Applicative f => Choice (Kleisli f)
 
 instance Filterable m => Cochoice (Kleisli m)
   where
-  unleft (Kleisli amb) = Kleisli $ \a -> fst $ partition $ amb (Left a)
+  unleft (Kleisli amb) = Kleisli $ fst . partition . amb . Left
