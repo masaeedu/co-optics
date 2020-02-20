@@ -41,6 +41,6 @@ main = do
   print $ runJoker $ int2real $ Joker $ input -- [42, 5]
 
   -- We can make up more sophisticated coprisms for deeper filtering
-  print $ runJoker $ int2real . halve $ Joker $ input -- [21]
+  print $ runJoker $ int2real . halve        $ Joker $ input -- [21]
 
   print $ runJoker $ re (liftPrism real2int) $ Joker $ fmap ("foo",) $ input -- [("foo", 42), ("foo", 5)]
