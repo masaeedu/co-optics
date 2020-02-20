@@ -32,6 +32,9 @@ main = do
   print $ speculate i2r (Just . (/ 2)) $ 2 -- Just 1
   print $ speculate i2r (Just . (/ 2)) $ 3 -- Nothing
 
+  -- Nonsense example where we find the factors of a number by just performing floating
+  -- point division with prime factors, discarding anything that doesn't end up being
+  -- an integer. Works because @Map Int@ is filterable
   let
     quotients :: Double -> Map Int Double
     quotients x = fromList [(1, x / 1), (2, x / 2), (3, x / 3), (5, x / 5)]
@@ -43,15 +46,16 @@ main = do
   let input = [42, 4.2, 5, 1.5]
   print $ i2r `whittle` input -- [42, 5]
 
-  -- We can make up more sophisticated coprisms for deeper filtering
+  -- Coprisms interact appropriately with other optics
   print $ (i2r . halve) `whittle` input -- [21]
 
   let input' = ("foo",) <$> input
-
   print $ re (liftPrism r2i) `whittle` input' -- [("foo", 42), ("foo", 5)]
 
   -- There's some weird filterables out there
+  -- E.g. parsers are filterable
   print $ flip (runStateT @String @Maybe) "0.5"
-        $ re r2i `whittle` do
-                             s <- get
-                             pure $ read s
+        $ re r2i `whittle`
+          do
+            s <- get
+            pure $ read s -- Nothing
