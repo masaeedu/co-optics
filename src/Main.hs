@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module Main where
 
 import Data.Profunctor (Profunctor(..))
@@ -33,8 +34,13 @@ main = do
   print $ runKleisli @Maybe (int2real $ arr (/ 2)) $ 2 -- Just 1
   print $ runKleisli @Maybe (int2real $ arr (/ 2)) $ 3 -- Nothing
 
-  -- Another, slightly stupider notion of "arrow" is one with no input
-  print $ runJoker $ int2real $ Joker [42, 4.2, 5, 1.5] -- [42, 5]
+  let input = [42, 4.2, 5, 1.5]
 
-  -- We can compose this stuff however much we like
-  print $ runJoker $ int2real . halve $ Joker $ [42, 4.2, 5, 1.5]  -- [21]
+  -- Another, slightly stupider notion of "arrow" is one with no input
+  -- This basically corresponds to filtering a container
+  print $ runJoker $ int2real $ Joker $ input -- [42, 5]
+
+  -- We can make up more sophisticated coprisms for deeper filtering
+  print $ runJoker $ int2real . halve $ Joker $ input -- [21]
+
+  print $ runJoker $ re (liftPrism real2int) $ Joker $ fmap ("foo",) $ input -- [("foo", 42), ("foo", 5)]
