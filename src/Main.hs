@@ -1,22 +1,29 @@
 module Main where
 
-import Data.Profunctor (Profunctor(..), Choice(..), Cochoice(..))
+import Data.Profunctor (Profunctor(..), Strong(..), Costrong(..), Choice(..), Cochoice(..))
 import Control.Arrow (Kleisli(..))
 import Control.Applicative (Alternative(..))
 import Control.Arrow (arr)
+import Data.Bifunctor (first, second)
 import Data.Bifunctor.Joker (Joker(..))
 
-class Functor f => Selective f
+class Functor f => Filterable f
   where
-  branch :: f (Either a b) -> (a -> c) -> (b -> c) -> f c
+  partition :: f (Either a b) -> (f a, f b)
+
+instance Filterable []
+  where
+  partition [] = ([], [])
+  partition (Left x : xs) = first (x :) $ partition xs
+  partition (Right x : xs) = second (x :) $ partition xs
+
+instance (Filterable m) => Cochoice (Joker m)
+  where
+  unleft (Joker m) = Joker $ fst $ partition m
 
 instance (Monad m, Alternative m) => Cochoice (Kleisli m)
   where
   unleft (Kleisli amb) = Kleisli $ \a -> amb (Left a) >>= either pure (const empty)
-
-instance (Monad m, Alternative m) => Cochoice (Joker m)
-  where
-  unleft (Joker m) = Joker $ m >>= either pure (const empty)
 
 newtype Re p s t a b = Re { runRe :: p b a -> p t s }
 
@@ -32,9 +39,18 @@ instance Cochoice p => Choice (Re p s t)
   where
   left' (Re p) = Re $ p . unleft
 
+instance Strong p => Costrong (Re p s t)
+  where
+  unfirst (Re p) = Re $ p . first'
+
+instance Costrong p => Strong (Re p s t)
+  where
+  first' (Re p) = Re $ p . unfirst
+
 type Optic p  s t a b = p a b -> p s t
 
 type Iso      s t a b = forall p. Profunctor p => Optic p s t a b
+type Lens     s t a b = forall p. Strong     p => Optic p s t a b
 type Prism    s t a b = forall p. Choice     p => Optic p s t a b
 type Coprism  s t a b = forall p. Cochoice   p => Optic p s t a b
 
@@ -50,9 +66,6 @@ prism build match = dimap match (either id build) . right'
 
 coprism :: (s -> a) -> (b -> Either a t) -> Coprism s t a b
 coprism cobuild comatch = unright . dimap (either id cobuild) comatch
-
-_Just :: Prism (Maybe a) (Maybe b) a b
-_Just = dimap (maybe (Right ()) Left) (either Just (const Nothing)) . left'
 
 _int :: Prism' Double Int
 _int = prism b m
