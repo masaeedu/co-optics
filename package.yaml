@@ -12,6 +12,8 @@ dependencies:
   - profunctors
   - bifunctors
   - containers
+  - transformers
+  - mtl
 
 ghc-options: -Wall
 default-extensions:

@@ -2,10 +2,12 @@ module Main where
 
 import Data.Profunctor (Profunctor(..))
 import Data.Map.Strict (Map, fromList)
+import Control.Monad.State
 
 import Optics
 import Profunctor.Re ()
 import Profunctor.Joker ()
+import Filterable ()
 
 r2i :: Prism' Double Int
 r2i = prism b m
@@ -47,3 +49,9 @@ main = do
   let input' = ("foo",) <$> input
 
   print $ re (liftPrism r2i) `whittle` input' -- [("foo", 42), ("foo", 5)]
+
+  -- There's some weird filterables out there
+  print $ flip (runStateT @String @Maybe) "0.5"
+        $ re r2i `whittle` do
+                             s <- get
+                             pure $ read s
