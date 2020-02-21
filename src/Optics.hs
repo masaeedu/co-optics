@@ -17,6 +17,7 @@ import Profunctor.Re
 import Profunctor.Kleisli
 import Profunctor.Traversing
 import Profunctor.Branching
+import Profunctor.Lazy
 
 type Optic p  s t a b = p a b -> p s t
 
@@ -84,7 +85,7 @@ instance Profunctor (Shop a b)
 
 instance Strong (Shop a b)
   where
-  first' (Shop v u) = Shop (v . fst) (\(~(a, c)) b -> (u a b, c))
+  first' (Shop v u) = Shop (v . fst) (\(a, c) b -> (u a b, c))
 
 lens :: (s -> a) -> (s -> b -> t) -> Lens s t a b
 lens v u = dimap (\s -> (s, v s)) (uncurry u) . second'
@@ -176,8 +177,8 @@ instance Applicative (Bazaar a b s)
   where
   pure a = Bazaar $ \_ _ -> pure a
 
-each :: (Demux p, Visitor p) => Optic p [a] [b] a b
-each pab = uncons $ m2e $ (start \/) $ (pab /\) $ each pab
+each :: (Demux p, Visitor p, Lazy2 p) => Optic p [a] [b] a b
+each pab = uncons $ m2e $ dimap (either Right Left) (either Right Left) $ (\x -> x \/ start) $ (pab /\) $ defer $ \_ -> each pab
 
 -- Reversals
 re :: Optic (Re p a b) s t a b -> Optic p b a t s

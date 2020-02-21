@@ -19,7 +19,7 @@ class Mux p => Visitor p
 
 instance Apply f => Mux (Kleisli f)
   where
-  Kleisli f /\ Kleisli g = Kleisli $ \(~(a, c)) -> liftA2 (,) (f a) (g c)
+  Kleisli f /\ Kleisli g = Kleisli $ \(a, c) -> liftA2 (,) (f a) (g c)
 
 instance Applicative f => Visitor (Kleisli f)
   where

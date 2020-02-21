@@ -16,8 +16,8 @@ class Alt f => Alternative f
 
 instance Alt Maybe
   where
-  Nothing <|> b = Right <$> b
-  a <|> _ = Left <$> a
+  Nothing <|> a = Right <$> a
+  a       <|> _ = Left  <$> a
 
 instance Alternative Maybe
   where

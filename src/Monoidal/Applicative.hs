@@ -27,9 +27,18 @@ instance Applicative Maybe
   where
   pure = Just
 
+instance Apply []
+  where
+  [] `zip` _ = []
+  (x : xs) `zip` ys = ((x, ) <$> ys) ++ zip xs ys
+
+instance Applicative []
+  where
+  pure = (:[])
+
 instance Monad m => Apply (StateT s m)
   where
-  StateT x `zip` StateT y = StateT $ \s -> x s >>= \(~(a, s')) -> fmap (first (a,)) $ y s'
+  StateT x `zip` StateT y = StateT $ \s -> x s >>= \(a, s') -> fmap (first (a,)) $ y s'
 
 instance Monad m => Applicative (StateT s m)
   where
@@ -37,7 +46,7 @@ instance Monad m => Applicative (StateT s m)
 
 instance (Apply m, Semigroup w) => Apply (WriterT w m)
   where
-  WriterT x `zip` WriterT y = WriterT $ liftA2 (\(~(a, w1)) (~(b, w2)) -> ((a, b), w1 <> w2)) x y
+  WriterT x `zip` WriterT y = WriterT $ liftA2 (\(a, w1) (b, w2) -> ((a, b), w1 <> w2)) x y
 
 instance (Applicative m, Monoid w) => Applicative (WriterT w m)
   where

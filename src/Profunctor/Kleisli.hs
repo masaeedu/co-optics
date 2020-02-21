@@ -15,7 +15,7 @@ instance Functor m => Profunctor (Kleisli m)
 
 instance Functor f => Strong (Kleisli f)
   where
-  first' (Kleisli amb) = Kleisli $ \(~(a, c)) -> fmap (, c) $ amb a
+  first' (Kleisli amb) = Kleisli $ \(a, c) -> fmap (, c) $ amb a
 
 instance Applicative f => Choice (Kleisli f)
   where

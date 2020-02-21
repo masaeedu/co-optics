@@ -16,7 +16,7 @@ dependencies:
   - mtl
   - digit
 
-ghc-options: [-Wall, -O2]
+ghc-options: [-Wall]
 default-extensions:
   - GADTs
 

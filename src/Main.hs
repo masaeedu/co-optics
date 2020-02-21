@@ -11,12 +11,10 @@ import Optics
 
 import Profunctor.Re ()
 import Profunctor.Joker ()
-import Profunctor.Kleisli
 import Profunctor.Branching
 
 import Monoidal.Filterable ()
 import Monoidal.Applicative
-import Monoidal.Alternative
 
 import Parser
 
@@ -72,10 +70,9 @@ main = do
             s <- get
             pure $ read s -- Nothing
 
-  let l = each $ digit \/ char
+  let dorc = digit \/ char
+  print $ biparse dorc $ ""   -- Nothing
+  print $ biparse dorc $ "5"  -- Just (Left DecDigit5, "")
+  print $ biparse dorc $ "c2" -- Just (Right 'c', "")
 
-  runKleisli (each (Kleisli print)) $ ["foo", "bar"]
-
-  print $ biparse l $ ""   -- Nothing
-  print $ biparse l $ "5"  -- Just (Left DecDigit5, "")
-  print $ biparse l $ "c2" -- Just (Right 'c', "")
+  print $ biparse (each dorc) $ "a1b2c3d4" -- Just ([Right 'a',Left DecDigit1,Right 'b',Left DecDigit2,Right 'c',Left DecDigit3,Right 'd',Left DecDigit4],"")

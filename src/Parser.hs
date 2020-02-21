@@ -2,6 +2,8 @@ module Parser where
 
 import MyPrelude
 
+import Debug.Trace
+
 import Data.Bifunctor.Joker
 import Data.Bifunctor.Product (Product(..))
 
@@ -16,18 +18,31 @@ import Profunctor.Kleisli
 import Monoidal.Applicative
 import Optics
 
-type Parser  = Joker (StateT String Maybe)
-type Printer = Kleisli (WriterT String Maybe)
+type F = Maybe
+type Parser  = Joker (StateT String F)
+type Printer = Kleisli (WriterT String F)
 type Biparser = Product Parser Printer
 
-biparser :: StateT String Maybe o -> (i -> WriterT String Maybe o) -> Biparser i o
+biparser :: StateT String F o -> (i -> WriterT String F o) -> Biparser i o
 biparser x y = Pair (Joker x) (Kleisli y)
 
-biparse :: Biparser i o -> String -> Maybe (o, String)
-biparse (Pair (Joker (StateT x)) _) = x
+parser :: Biparser i o -> Parser i o
+parser (Pair p _) = p
 
-biprint :: Biparser i o -> i -> Maybe (o, String)
-biprint (Pair _ (Kleisli f)) = runWriterT . f
+runParser :: Parser i o -> String -> F (o, String)
+runParser = runStateT . runJoker
+
+printer :: Biparser i o -> Printer i o
+printer (Pair _ p) = p
+
+runPrinter :: Printer i o -> i -> F (o, String)
+runPrinter = (runWriterT .) . runKleisli
+
+biparse :: Biparser i o -> String -> F (o, String)
+biparse = runParser . parser
+
+biprint :: Biparser i o -> i -> F (o, String)
+biprint = runPrinter . printer
 
 char :: Biparser Char Char
 char = biparser r w
@@ -35,7 +50,7 @@ char = biparser r w
   r = do
     s <- get
     case s of
-      [] -> throwError ()
+      [] -> StateT $ const Nothing
       (c : s') -> do
         put s'
         pure $ c
