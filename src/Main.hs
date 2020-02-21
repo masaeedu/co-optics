@@ -80,53 +80,81 @@ main = do
   let
     -- A biparser that parses one character
     -- It turns out we can get pretty far with this
-    char :: Biparser Maybe Char Char
+    char :: Biparser' Maybe Char
     char = biparser r w
       where
       r = get >>= \case { [] -> empty; (c : xs) -> c <$ put xs }
       w c = c <$ tell [c]
 
     -- Same biparser run through a backwards prism @Prism' Char DecDigit@
-    digit :: Biparser Maybe DecDigit DecDigit
+    digit :: Biparser' Maybe DecDigit
     digit = re c2d $ char
 
     -- Run it through a traversal to get many digits
-    digits :: Biparser Maybe [DecDigit] [DecDigit]
+    digits :: Biparser' Maybe [DecDigit]
     digits = each digit
 
     -- Run it through more backwards prisms to get a natural number
-    int :: Biparser Maybe Natural Natural
+    int :: Biparser' Maybe Natural
     int = re (asNonEmpty . digits2int) $ digits
 
-  -- You can combine parsers* a couple of ways. First, you can take their disjunction.
+  -- You can combine parsers[1] a couple of ways
+
+  -- First, you can take their disjunction.
 
   -- E.g. we might want to first try parsing a digit, then fall back to parsing a char
-  let digitOrChar = digit \/ char
+  let
+    digitOrChar :: Biparser Maybe (Either DecDigit Char) (Either DecDigit Char)
+    digitOrChar = digit \/ char
 
-  print $ biparse digitOrChar $ ""   -- Nothing
-  print $ biparse digitOrChar $ "5"  -- Just (Left DecDigit5, "")
-  print $ biparse digitOrChar $ "c2" -- Just (Right 'c', "")
+  -- Try it out on some inputs
+  print $ biparse digitOrChar $ ""   -- > Nothing
+  print $ biparse digitOrChar $ "5"  -- > Just (Left DecDigit5, "")
+  print $ biparse digitOrChar $ "c2" -- > Just (Right 'c', "")
 
   -- Obviously we can keep making things more complicated
   -- How about a mixed list of digits and chars?
-  print $ biparse (each digitOrChar) $ "a1b2c3d4" -- Just ([Right 'a',Left DecDigit1,Right 'b',Left DecDigit2,Right 'c',Left DecDigit3,Right 'd',Left DecDigit4],"")
+  print $ biparse (each digitOrChar) $ "a1b2c3d4"
+  -- > Just ([Right 'a',Left DecDigit1,Right 'b',Left DecDigit2,Right 'c',Left DecDigit3,Right 'd',Left DecDigit4],"")
 
   -- Let's try out that @int@ biparser we made
-  print $ biparse int $ "123131234" -- Just (123131234,"")
-  print $ biparse int $ "123a123"   -- Just (123, "a123")
+  print $ biparse int $ "123131234" -- > Just (123131234,"")
+  print $ biparse int $ "123a123"   -- > Just (123, "a123")
 
   -- Let's mix integers and arbitrary characters
   let intOrChar = int \/ char
-  print $ biparse intOrChar $ "123a123"        -- Just (Left 123,"a123")
-  print $ biparse (each intOrChar) $ "123a123" -- Just ([Left 123,Right 'a',Left 123],"")
+  print $ biparse intOrChar $ "123a123"        -- > Just (Left 123,"a123")
+  print $ biparse (each intOrChar) $ "123a123" -- > Just ([Left 123,Right 'a',Left 123],"")
 
-  -- Oh, btw, these are BIparsers. So they print too. Let's try running the last example backwards to see if we get the original string back
-  print $ biprint (each intOrChar) $ [Left 123, Right 'a', Left 123] -- Just ([Left 123,Right 'a',Left 123],"123a123")
+  -- Ok, so that's great, but what does the  "bi" in "biparser" mean?
 
-  -- Ok so much for disjunction. One other neat thing we can do is conjoin parsers
-  -- so the stuff they're parsing out gets filled into some product type
-  print $ biparse (each $ int /\ char) $ "12,13,14."                  -- Just ([(12,','),(13,','),(14,'.')],"")
-  print $ biprint (each $ int /\ char) $ [(12,','),(13,','),(14,'.')] -- Just ([(12,','),(13,','),(14,'.')],"12,13,14.")
+  -- Well, they print too. Let's try running the last example backwards to see if we get the original string back
+  print $ biprint (each intOrChar) $ [Left 123, Right 'a', Left 123] -- > Just ([Left 123,Right 'a',Left 123],"123a123")
 
-  -- * This is actually just a new pair of general purpose abstractions for profunctors, biparsers are just one instance
-  -- See @Mux@ and @Demux@ in the repo
+  -- Ok now maybe we're getting bored with disjunction. Another other neat thing we can do is conjoin parsers.
+  -- This way the stuff they're parsing out gets filled into some product type
+  print $ biparse (each $ int /\ char) $ "12,13,14."                  -- > Just ([(12,','),(13,','),(14,'.')],"")
+
+  -- Of course that works backwards too: we can print stuff out of a product
+  print $ biprint (each $ int /\ char) $ [(12,','),(13,','),(14,'.')] -- > Just ([(12,','),(13,','),(14,'.')],"12,13,14.")
+
+  -- Ok now let's see how to use unlawful isomorphisms (or split monomorphisms) to throw away
+  -- stuff we don't care about
+  let
+    char2space :: Prism' Char Char
+    char2space = prism id (\case { ' ' -> Right ' '; c -> Left c })
+
+    space :: Biparser' Maybe Char
+    space = re char2space char
+
+    -- The @rmap snd@ in here is not a lawful iso! It discards information we don't care about (spaces)
+    spacesThenChar :: Biparser Maybe (String, Char) Char
+    spacesThenChar = rmap snd $ each space /\ char
+
+  -- The spaces are discarded when we're parsing
+  print $ biparse spacesThenChar $ "                 f" -- Just ('f',"")
+  -- When printing, it will print however many spaces the full structure specifies
+  print $ biprint spacesThenChar $ ("      ", 'f')      -- Just ('f',"             f")
+
+  -- [1] - Actually, these combination patterns have nothing to do with biparsers specifically, those are just one instance
+  --       The general purpose is for any profunctors that can support an instance, see @Mux@ and @Demux@ in the repo
