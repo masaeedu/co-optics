@@ -1,4 +1,4 @@
-module Profunctor.Traversing where
+module Profunctor.Mux where
 
 import MyPrelude
 

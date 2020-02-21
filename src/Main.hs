@@ -16,8 +16,8 @@ import Optics
 
 import Profunctor.Re ()
 import Profunctor.Joker ()
-import Profunctor.Branching
-import Profunctor.Traversing
+import Profunctor.Mux
+import Profunctor.Demux
 
 import Monoidal.Filterable ()
 import Monoidal.Applicative

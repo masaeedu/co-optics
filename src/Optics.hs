@@ -21,8 +21,8 @@ import Monoidal.Filterable
 import Profunctor.Joker ()
 import Profunctor.Re
 import Profunctor.Kleisli
-import Profunctor.Traversing
-import Profunctor.Branching
+import Profunctor.Mux
+import Profunctor.Demux
 import Profunctor.Lazy
 
 type Optic p  s t a b = p a b -> p s t

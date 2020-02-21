@@ -1,4 +1,4 @@
-module Profunctor.Branching where
+module Profunctor.Demux where
 
 import MyPrelude
 
