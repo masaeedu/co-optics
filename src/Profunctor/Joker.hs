@@ -2,7 +2,7 @@ module Profunctor.Joker where
 
 import MyPrelude
 
-import Data.Profunctor (Cochoice(..), Strong(..), Costrong(..))
+import Data.Profunctor (Cochoice(..), Costrong(..))
 import Data.Bifunctor.Joker (Joker(..))
 
 import Monoidal.Alternative (Alt(..))

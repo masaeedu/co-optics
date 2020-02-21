@@ -5,8 +5,6 @@ import MyPrelude
 import Data.Bifunctor.Joker
 import Data.Bifunctor.Product (Product(..))
 
-import Control.Monad.Except (MonadError(..))
-
 import Control.Monad.State.Lazy (StateT(..), get, put)
 import Control.Monad.Writer.Lazy (WriterT(..), tell)
 
@@ -14,41 +12,41 @@ import Data.Digit (DecDigit, charDecimal)
 
 import Profunctor.Kleisli
 import Monoidal.Applicative
+import Monoidal.Alternative
 import Optics
 
-type F = Maybe
-type Parser  = Joker (StateT String F)
-type Printer = Kleisli (WriterT String F)
-type Biparser = Product Parser Printer
+type Parser   f = Joker (StateT String f)
+type Printer  f = Kleisli (WriterT String f)
+type Biparser f = Product (Parser f) (Printer f)
 
-biparser :: StateT String F o -> (i -> WriterT String F o) -> Biparser i o
+biparser :: StateT String f o -> (i -> WriterT String f o) -> Biparser f i o
 biparser x y = Pair (Joker x) (Kleisli y)
 
-parser :: Biparser i o -> Parser i o
+parser :: Biparser f i o -> Parser f i o
 parser (Pair p _) = p
 
-runParser :: Parser i o -> String -> F (o, String)
+runParser :: Parser f i o -> String -> f (o, String)
 runParser = runStateT . runJoker
 
-printer :: Biparser i o -> Printer i o
+printer :: Biparser f i o -> Printer f i o
 printer (Pair _ p) = p
 
-runPrinter :: Printer i o -> i -> F (o, String)
+runPrinter :: Printer f i o -> i -> f (o, String)
 runPrinter = (runWriterT .) . runKleisli
 
-biparse :: Biparser i o -> String -> F (o, String)
+biparse :: Biparser f i o -> String -> f (o, String)
 biparse = runParser . parser
 
-biprint :: Biparser i o -> i -> F (o, String)
+biprint :: Biparser f i o -> i -> f (o, String)
 biprint = runPrinter . printer
 
-char :: Biparser Char Char
+char :: Biparser Maybe Char Char
 char = biparser r w
   where
   r = do
     s <- get
     case s of
-      [] -> throwError ()
+      [] -> StateT $ const empty
       (c : s') -> do
         put s'
         pure $ c
@@ -60,5 +58,5 @@ char = biparser r w
 c2d :: Prism' Char DecDigit
 c2d = convert charDecimal
 
-digit :: Biparser DecDigit DecDigit
+digit :: Biparser Maybe DecDigit DecDigit
 digit = re c2d char
