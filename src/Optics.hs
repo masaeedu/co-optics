@@ -193,7 +193,7 @@ instance Applicative (Bazaar a b s)
   pure a = Bazaar $ \_ _ -> pure a
 
 each :: (Demux p, Visitor p, Lazy2 p) => Optic p [a] [b] a b
-each pab = uncons $ m2e $ dimap (either Right Left) (either Right Left) $ (\x -> x \/ start) $ (pab /\) $ defer $ \_ -> each pab
+each pab = uncons $ m2e $ dimap (either Right Left) (either Right Left) $ (\/ start) $ (pab /\) $ defer $ \_ -> each pab
 
 -- Reversals
 re :: Optic (Re p a b) s t a b -> Optic p b a t s
