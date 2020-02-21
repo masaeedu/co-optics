@@ -70,6 +70,7 @@ main = do
             s <- get
             pure $ read s -- Nothing
 
+  -- Try parsing as a digit, if it fails, try parsing as a character
   let dorc = digit \/ char
   print $ biparse dorc $ ""   -- Nothing
   print $ biparse dorc $ "5"  -- Just (Left DecDigit5, "")

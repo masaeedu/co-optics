@@ -40,6 +40,7 @@ biparse = runParser . parser
 biprint :: Biparser f i o -> i -> f (o, String)
 biprint = runPrinter . printer
 
+-- A biparser
 char :: Biparser Maybe Char Char
 char = biparser r w
   where
@@ -55,8 +56,6 @@ char = biparser r w
     tell [c]
     pure $ c
 
-c2d :: Prism' Char DecDigit
-c2d = convert charDecimal
-
+-- Same biparser run through a backwards prism
 digit :: Biparser Maybe DecDigit DecDigit
 digit = re c2d char

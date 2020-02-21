@@ -8,6 +8,8 @@ import Data.Bifunctor (first, second)
 import Data.Bifunctor.Joker (Joker(..))
 import Data.Functor.Identity (Identity(..))
 
+import Data.Digit (DecDigit, charDecimal)
+
 import Monoidal.Applicative
 import Monoidal.Decisive
 import Monoidal.Filterable
@@ -135,6 +137,9 @@ liftPrism p = prism (fmap $ build p) (decide . fmap (match p))
 
 _Just :: Prism (Maybe a) (Maybe b) a b
 _Just = prism Just (maybe (Left Nothing) Right)
+
+c2d :: Prism' Char DecDigit
+c2d = convert charDecimal
 
 -- Traversals
 newtype Bazaar a b s t = Bazaar { runBazaar :: forall f. Applicative f => (a -> f b) -> s -> f t }
