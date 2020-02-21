@@ -3,12 +3,16 @@ module Optics where
 
 import MyPrelude
 
+import GHC.Natural
+
 import Data.Profunctor (Profunctor(..), Strong(..), Costrong(..), Choice(..), Cochoice(..))
 import Data.Bifunctor (first, second)
 import Data.Bifunctor.Joker (Joker(..))
 import Data.Functor.Identity (Identity(..))
 
-import Data.Digit (DecDigit, charDecimal)
+import Data.List.NonEmpty (NonEmpty(..), toList)
+
+import Data.Digit (DecDigit, charDecimal, _NaturalDigits)
 
 import Monoidal.Applicative
 import Monoidal.Decisive
@@ -140,6 +144,12 @@ _Just = prism Just (maybe (Left Nothing) Right)
 
 c2d :: Prism' Char DecDigit
 c2d = convert charDecimal
+
+digits2int :: Prism' (NonEmpty DecDigit) Natural
+digits2int = convert _NaturalDigits
+
+asNonEmpty :: Prism [a] [b] (NonEmpty a) (NonEmpty b)
+asNonEmpty = prism toList (\case { [] -> Left []; (x : xs) -> Right $ x :| xs })
 
 -- Traversals
 newtype Bazaar a b s t = Bazaar { runBazaar :: forall f. Applicative f => (a -> f b) -> s -> f t }

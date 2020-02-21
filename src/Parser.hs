@@ -2,8 +2,12 @@ module Parser where
 
 import MyPrelude
 
+import GHC.Natural
+
 import Data.Bifunctor.Joker
 import Data.Bifunctor.Product (Product(..))
+
+import Data.List.NonEmpty
 
 import Control.Monad.State.Lazy (StateT(..), get, put)
 import Control.Monad.Writer.Lazy (WriterT(..), tell)
@@ -59,3 +63,6 @@ char = biparser r w
 -- Same biparser run through a backwards prism
 digit :: Biparser Maybe DecDigit DecDigit
 digit = re c2d char
+
+int :: Biparser Maybe Natural Natural
+int = re (asNonEmpty . digits2int) $ each $ digit

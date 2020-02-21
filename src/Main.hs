@@ -77,3 +77,9 @@ main = do
   print $ biparse dorc $ "c2" -- Just (Right 'c', "")
 
   print $ biparse (each dorc) $ "a1b2c3d4" -- Just ([Right 'a',Left DecDigit1,Right 'b',Left DecDigit2,Right 'c',Left DecDigit3,Right 'd',Left DecDigit4],"")
+
+  print $ biparse int $ "123131234"                -- Just (123131234,"")
+  print $ biparse int $ "123a123"                  -- Just (123, "a123")
+  print $ biparse (int \/ char) $ "123a123"        -- Just (Left 123,"a123")
+  print $ biparse (each $ int \/ char) $ "123a123" -- Just ([Left 123,Right 'a',Left 123],"")
+
