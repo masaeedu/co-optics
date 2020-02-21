@@ -1,4 +1,4 @@
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax, LambdaCase #-}
 module Main where
 
 import MyPrelude
@@ -10,7 +10,7 @@ import Data.Map.Strict (Map, fromList)
 import Control.Monad.State.Lazy
 import Control.Monad.Writer.Lazy
 
-import Data.Digit (DecDigit, charDecimal)
+import Data.Digit (DecDigit)
 
 import Optics
 
@@ -79,20 +79,12 @@ main = do
 
   let
     -- A biparser that parses one character
-    -- It turns out this is actually all we need
+    -- It turns out we can get pretty far with this
     char :: Biparser Maybe Char Char
     char = biparser r w
       where
-      r = do
-        s <- get
-        case s of
-          [] -> StateT $ const empty
-          (c : s') -> do
-            put s'
-            pure $ c
-      w c = do
-        tell [c]
-        pure $ c
+      r = get >>= \case { [] -> empty; (c : xs) -> c <$ put xs }
+      w c = c <$ tell [c]
 
     -- Same biparser run through a backwards prism @Prism' Char DecDigit@
     digit :: Biparser Maybe DecDigit DecDigit
