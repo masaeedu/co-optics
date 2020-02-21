@@ -149,7 +149,7 @@ testBiparsing = do
   -- It works like this
   print $ biparse spacesThenChar $ "  f" -- > Just (("  ",'f'),"")
 
-  -- We can see that we end up with string consisting of only spaces, and the character we parsed out.
+  -- We can see that our result consists of a whitespace string and the character we parsed out.
 
   -- Let's say we think the spaces are useless, and we want to throw them away. A conservative change
   -- we can make is adjust the output end of the biparser, leaving the input end untouched
@@ -172,7 +172,10 @@ testBiparsing = do
   -- We can use a split monomorphism (aka a one sided inverse) to discard this structure entirely
   let
     spacesThenChar'' :: Biparser' Maybe Char
-    spacesThenChar'' = dimap ("", ) snd spacesThenChar -- The defaulted empty string here is what prevents this from being a proper isomorphism
+    spacesThenChar'' = discard spacesThenChar
+      where
+      discard :: Iso' Char (String, Char)
+      discard = iso ("", ) snd -- @snd . ("", ) = id@, but @("", ) . snd != id@
 
   -- Test it out
   print $ biparse spacesThenChar'' $ " f"   -- > Just ('f',"")
