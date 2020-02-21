@@ -2,6 +2,7 @@
 module Main where
 
 import MyPrelude
+import qualified Prelude as P
 
 import GHC.Natural
 
@@ -186,9 +187,10 @@ testBiparsing = do
   let
     string :: Biparser' Maybe String
     string = do
-      n <- lmap (intToNatural . length) $ int
-      lmap (const ' ') $ space
-      bundle $ replicate (naturalToInt n) char
+      n  <- int   & lmap (intToNatural . length)
+      _  <- space & lmap (const ' ')
+      cs <- char  & replicate (naturalToInt n) & bundle
+      P.pure cs
 
   print $ biparse string $ "10 whoops"         -- > Nothing
   print $ biparse string $ "6 lambda calculus" -- > Just ("lambda"," calculus")
