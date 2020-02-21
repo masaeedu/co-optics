@@ -3,18 +3,25 @@ module Main where
 
 import MyPrelude
 
+import GHC.Natural
+
 import Data.Profunctor (Profunctor(..))
 import Data.Map.Strict (Map, fromList)
 import Control.Monad.State.Lazy
+import Control.Monad.Writer.Lazy
+
+import Data.Digit (DecDigit, charDecimal)
 
 import Optics
 
 import Profunctor.Re ()
 import Profunctor.Joker ()
 import Profunctor.Branching
+import Profunctor.Traversing
 
 import Monoidal.Filterable ()
 import Monoidal.Applicative
+import Monoidal.Alternative
 
 import Parser
 
@@ -70,16 +77,65 @@ main = do
             s <- get
             pure $ read s -- Nothing
 
-  -- Try parsing as a digit, if it fails, try parsing as a character
-  let dorc = digit \/ char
-  print $ biparse dorc $ ""   -- Nothing
-  print $ biparse dorc $ "5"  -- Just (Left DecDigit5, "")
-  print $ biparse dorc $ "c2" -- Just (Right 'c', "")
+  let
+    -- A biparser that parses one character
+    -- It turns out this is actually all we need
+    char :: Biparser Maybe Char Char
+    char = biparser r w
+      where
+      r = do
+        s <- get
+        case s of
+          [] -> StateT $ const empty
+          (c : s') -> do
+            put s'
+            pure $ c
+      w c = do
+        tell [c]
+        pure $ c
 
-  print $ biparse (each dorc) $ "a1b2c3d4" -- Just ([Right 'a',Left DecDigit1,Right 'b',Left DecDigit2,Right 'c',Left DecDigit3,Right 'd',Left DecDigit4],"")
+    -- Same biparser run through a backwards prism @Prism' Char DecDigit@
+    digit :: Biparser Maybe DecDigit DecDigit
+    digit = re c2d $ char
 
-  print $ biparse int $ "123131234"                -- Just (123131234,"")
-  print $ biparse int $ "123a123"                  -- Just (123, "a123")
-  print $ biparse (int \/ char) $ "123a123"        -- Just (Left 123,"a123")
-  print $ biparse (each $ int \/ char) $ "123a123" -- Just ([Left 123,Right 'a',Left 123],"")
+    -- Run it through a traversal to get many digits
+    digits :: Biparser Maybe [DecDigit] [DecDigit]
+    digits = each digit
 
+    -- Run it through more backwards prisms to get a natural number
+    int :: Biparser Maybe Natural Natural
+    int = re (asNonEmpty . digits2int) $ digits
+
+  -- You can combine parsers* a couple of ways. First, you can take their disjunction.
+
+  -- E.g. we might want to first try parsing a digit, then fall back to parsing a char
+  let digitOrChar = digit \/ char
+
+  print $ biparse digitOrChar $ ""   -- Nothing
+  print $ biparse digitOrChar $ "5"  -- Just (Left DecDigit5, "")
+  print $ biparse digitOrChar $ "c2" -- Just (Right 'c', "")
+
+  -- Obviously we can keep making things more complicated
+  -- How about a mixed list of digits and chars?
+  print $ biparse (each digitOrChar) $ "a1b2c3d4" -- Just ([Right 'a',Left DecDigit1,Right 'b',Left DecDigit2,Right 'c',Left DecDigit3,Right 'd',Left DecDigit4],"")
+
+  -- Let's try out that @int@ biparser we made
+  print $ biparse int $ "123131234" -- Just (123131234,"")
+  print $ biparse int $ "123a123"   -- Just (123, "a123")
+
+  -- Let's mix integers and arbitrary characters
+  let intOrChar = int \/ char
+  print $ biparse intOrChar $ "123a123"        -- Just (Left 123,"a123")
+  print $ biparse (each intOrChar) $ "123a123" -- Just ([Left 123,Right 'a',Left 123],"")
+
+  -- Oh, btw, these are BIparsers. So they print too. Let's try running the last example backwards to see if we get the original string back
+  print $ biprint (each intOrChar) $ [Left 123, Right 'a', Left 123] -- Just ([Left 123,Right 'a',Left 123],"123a123")
+
+  -- Ok so much for disjunction. One other neat thing we can do is conjoin parsers
+  -- so the stuff they're parsing out gets filled into some product type
+  print $ biparse (each $ int /\ char) $ "12,13,14." -- Just ([(12,','),(13,','),(14,'.')],"")
+
+  -- etc. etc. etc. You find the rest of the patterns
+
+  -- * This is actually just a new pair of general purpose abstractions for profunctors, biparsers are just one instance
+  -- See @Mux@ and @Demux@ in the repo

@@ -15,9 +15,6 @@ import Control.Monad.Writer.Lazy (WriterT(..), tell)
 import Data.Digit (DecDigit, charDecimal)
 
 import Profunctor.Kleisli
-import Monoidal.Applicative
-import Monoidal.Alternative
-import Optics
 
 type Parser   f = Joker (StateT String f)
 type Printer  f = Kleisli (WriterT String f)
@@ -43,26 +40,3 @@ biparse = runParser . parser
 
 biprint :: Biparser f i o -> i -> f (o, String)
 biprint = runPrinter . printer
-
--- A biparser
-char :: Biparser Maybe Char Char
-char = biparser r w
-  where
-  r = do
-    s <- get
-    case s of
-      [] -> StateT $ const empty
-      (c : s') -> do
-        put s'
-        pure $ c
-
-  w c = do
-    tell [c]
-    pure $ c
-
--- Same biparser run through a backwards prism
-digit :: Biparser Maybe DecDigit DecDigit
-digit = re c2d char
-
-int :: Biparser Maybe Natural Natural
-int = re (asNonEmpty . digits2int) $ each $ digit
