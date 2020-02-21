@@ -18,6 +18,8 @@ import Profunctor.Re ()
 import Profunctor.Joker ()
 import Profunctor.Mux
 import Profunctor.Demux
+import Profunctor.Product
+import Profunctor.Muxable
 
 import Monoidal.Filterable ()
 import Monoidal.Applicative
@@ -175,6 +177,21 @@ testBiparsing = do
   print $ biparse spacesThenChar'' $ " f"   -- > Just ('f',"")
   print $ biparse spacesThenChar'' $ "   f" -- > Just ('f',"")
   print $ biprint spacesThenChar'' $ 'f'    -- > Just ('f',"f")
+
+  -- Ok, so far we've been dealing with totally static parsing. Now let's look at dynamic (monadic)
+  -- parsing
+
+  -- Let's say we have this combinator that lets us replicate a parser some given number of times
+  let
+    string :: Biparser' Maybe String
+    string = do
+      n <- lmap (intToNatural . length) $ int
+      lmap (const ' ') $ space
+      bundle $ replicate (naturalToInt n) char
+
+  print $ biparse string $ "10 whoops"         -- > Nothing
+  print $ biparse string $ "6 lambda calculus" -- > Just ("lambda"," calculus")
+  print $ biprint string $ "SKI"               -- > Just ("SKI","3 SKI")
 
   -- [1] - These combinators actually don't have anything to do with biparsers specifically, biparsers are just one
   --       type of profunctor they can be instantiated at. See @Mux@ and @Demux@ in the repo for the general classes
