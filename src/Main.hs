@@ -99,15 +99,15 @@ testBiparsing = do
   -- For the sake of example, let's run our @digits@ biparser through more
   -- coprisms until it turns into a biparser of natural numbers
   let
-    int :: Biparser' Maybe Natural
-    int = re (asNonEmpty . digits2int) $ digits
+    nat :: Biparser' Maybe Natural
+    nat = re (asNonEmpty . digits2int) $ digits
 
   -- Let's see if it works
-  print $ biparse int $ "123131234" -- > Just (123131234,"")
-  print $ biparse int $ "123a123"   -- > Just (123, "a123")
+  print $ biparse nat $ "123131234" -- > Just (123131234,"")
+  print $ biparse nat $ "123a123"   -- > Just (123, "a123")
 
   -- We can mix and match
-  let intOrChar = int \/ char
+  let intOrChar = nat \/ char
   print $ biparse intOrChar $ "123a123"        -- > Just (Left 123,"a123")
   print $ biparse (each intOrChar) $ "123a123" -- > Just ([Left 123,Right 'a',Left 123],"")
 
@@ -125,7 +125,7 @@ testBiparsing = do
   -- Here's an example where we use this technique to model a list
   let
     delimitedInts :: Biparser' Maybe [(Natural, Char)]
-    delimitedInts = each $ int /\ char
+    delimitedInts = each $ nat /\ char
 
   print $ biparse delimitedInts $ "12,13,14."                  -- > Just ([(12,','),(13,','),(14,'.')],"")
   print $ biprint delimitedInts $ [(12,','),(13,','),(14,'.')] -- > Just ([(12,','),(13,','),(14,'.')],"12,13,14.")
@@ -187,7 +187,7 @@ testBiparsing = do
   let
     string :: Biparser' Maybe String
     string = do
-      n  <- int   & lmap (intToNatural . length)
+      n  <- nat   & lmap (intToNatural . length)
       _  <- space & lmap (const ' ')
       cs <- char  & replicate (naturalToInt n) & bundle
       P.pure cs
