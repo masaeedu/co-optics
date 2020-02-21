@@ -1,5 +1,7 @@
 module Profunctor.Re where
 
+import MyPrelude
+
 import Data.Profunctor (Profunctor(..), Strong(..), Costrong(..), Choice(..), Cochoice(..))
 
 newtype Re p s t a b = Re { runRe :: p b a -> p t s }

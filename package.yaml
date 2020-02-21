@@ -14,8 +14,9 @@ dependencies:
   - containers
   - transformers
   - mtl
+  - digit
 
-ghc-options: -Wall
+ghc-options: [-Wall, -O2]
 default-extensions:
   - GADTs
 
@@ -43,6 +44,8 @@ default-extensions:
   - DefaultSignatures
 
   - TupleSections
+
+  - NoImplicitPrelude
 
 library: {}
 executable:

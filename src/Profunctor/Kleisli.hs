@@ -1,8 +1,11 @@
 module Profunctor.Kleisli where
 
+import MyPrelude
+
 import Data.Profunctor (Profunctor (..), Strong(..), Choice(..), Cochoice(..))
 
-import Filterable
+import Monoidal.Filterable
+import Monoidal.Applicative
 
 newtype Kleisli m a b = Kleisli { runKleisli :: a -> m b }
 
@@ -12,7 +15,7 @@ instance Functor m => Profunctor (Kleisli m)
 
 instance Functor f => Strong (Kleisli f)
   where
-  first' (Kleisli amb) = Kleisli $ \(a, c) -> fmap (, c) $ amb a
+  first' (Kleisli amb) = Kleisli $ \(~(a, c)) -> fmap (, c) $ amb a
 
 instance Applicative f => Choice (Kleisli f)
   where

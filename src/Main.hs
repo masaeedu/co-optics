@@ -1,13 +1,24 @@
+{-# LANGUAGE RebindableSyntax #-}
 module Main where
+
+import MyPrelude
 
 import Data.Profunctor (Profunctor(..))
 import Data.Map.Strict (Map, fromList)
-import Control.Monad.State
+import Control.Monad.State.Lazy
 
 import Optics
+
 import Profunctor.Re ()
 import Profunctor.Joker ()
-import Filterable ()
+import Profunctor.Kleisli
+import Profunctor.Branching
+
+import Monoidal.Filterable ()
+import Monoidal.Applicative
+import Monoidal.Alternative
+
+import Parser
 
 r2i :: Prism' Double Int
 r2i = prism b m
@@ -60,3 +71,11 @@ main = do
           do
             s <- get
             pure $ read s -- Nothing
+
+  let l = each $ digit \/ char
+
+  runKleisli (each (Kleisli print)) $ ["foo", "bar"]
+
+  print $ biparse l $ ""   -- Nothing
+  print $ biparse l $ "5"  -- Just (Left DecDigit5, "")
+  print $ biparse l $ "c2" -- Just (Right 'c', "")

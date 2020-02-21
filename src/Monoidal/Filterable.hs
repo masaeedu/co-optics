@@ -1,11 +1,14 @@
-module Filterable where
+module Monoidal.Filterable where
+
+import MyPrelude
 
 import Data.Bifunctor (first, second, bimap)
 import Data.Map.Strict (Map, foldrWithKey, empty, insert)
-import Control.Monad.State (StateT(..))
+import Control.Monad.State.Lazy (StateT(..))
+import Control.Monad.Writer.Lazy (WriterT(..))
 import Data.Tuple (swap)
 
-import Decisive
+import Monoidal.Decisive
 
 class Functor f => Filterable f
   where
@@ -33,7 +36,7 @@ trivial fab = (fmap fst fab, fmap snd fab)
 partitionInner :: (Functor f, Filterable g) => f (g (Either a b)) -> (f (g a), f (g b))
 partitionInner = trivial . fmap partition
 
-partitionOuter :: (Filterable f, Decisive g) => f (g (Either a b)) -> (f (g a), f (g b))
+partitionOuter :: (Filterable f, Decide g) => f (g (Either a b)) -> (f (g a), f (g b))
 partitionOuter = partition . fmap decide
 
 instance Filterable m => Filterable (StateT s m)
@@ -45,3 +48,13 @@ instance Filterable m => Filterable (StateT s m)
 
     bwd :: Functor m => (s -> m (s, a)) -> StateT s m a
     bwd = StateT . (fmap swap .)
+
+instance Filterable m => Filterable (WriterT w m)
+  where
+  partition = bimap bwd bwd . partitionOuter . fwd
+    where
+    fwd :: Functor m => WriterT w m a -> m (w, a)
+    fwd= fmap swap . runWriterT
+
+    bwd :: Functor m => m (w, a) -> WriterT w m a
+    bwd = WriterT . fmap swap
