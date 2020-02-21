@@ -147,14 +147,41 @@ main = do
     space :: Biparser' Maybe Char
     space = re char2space char
 
-    -- The @rmap snd@ in here is not a lawful iso! It discards information we don't care about (spaces)
-    spacesThenChar :: Biparser Maybe (String, Char) Char
-    spacesThenChar = rmap snd $ each space /\ char
+    -- So here's a biparser that parses out a bunch of spaces, then some other character
+    spacesThenChar :: Biparser' Maybe (String, Char)
+    spacesThenChar = each space /\ char
 
-  -- The spaces are discarded when we're parsing
-  print $ biparse spacesThenChar $ "                 f" -- Just ('f',"")
-  -- When printing, it will print however many spaces the full structure specifies
-  print $ biprint spacesThenChar $ ("      ", 'f')      -- Just ('f',"             f")
+  -- It works like this
+  print $ biparse spacesThenChar $ "  f" -- > Just (("  ",'f'),"")
+
+  -- But let's say we think spaces are useless, and we want to throw them away
+
+  -- One slightly conservative change we can make is adjust the output end of the biparser, but
+  -- leave the input end alone
+  let
+    spacesThenChar' :: Biparser Maybe (String, Char) Char
+    spacesThenChar' = rmap snd spacesThenChar
+
+  -- Now our parsing output only contains the stuff we care about for further manipulation
+  print $ biparse spacesThenChar' $ "  f" -- > Just ('f',"")
+
+  -- However, when printing, we still need to specify the full structure, including the requisite
+  -- number of spaces. These will show up in the printed output, although the structured output of
+  -- the printer will forget about the spaces and only keep the character
+  print $ biprint spacesThenChar' $ ("    ", 'f') -- > Just ('f',"    f")
+
+  -- Suppose we REALLY don't care about these spaces, even for printing purposes. We just
+  -- want to break the isomorphism and pretend even the printer doesn't even expect spaces
+
+  -- We can use a split monomorphism (aka a one sided inverse aka unlawful isomorphism) to discard
+  -- this structure entirely
+  let
+    spacesThenChar'' :: Biparser' Maybe Char
+    spacesThenChar'' = dimap ("", ) snd spacesThenChar -- The empty string here is the lie
+
+  print $ biparse spacesThenChar'' $ " f"   -- > Just ('f',"")
+  print $ biparse spacesThenChar'' $ "   f" -- > Just ('f',"")
+  print $ biprint spacesThenChar'' $ 'f'    -- > Just ('f',"f")
 
   -- [1] - Actually, these combination patterns have nothing to do with biparsers specifically, those are just one instance
   --       The general purpose is for any profunctors that can support an instance, see @Mux@ and @Demux@ in the repo
