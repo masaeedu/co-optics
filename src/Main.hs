@@ -133,7 +133,8 @@ main = do
 
   -- Ok so much for disjunction. One other neat thing we can do is conjoin parsers
   -- so the stuff they're parsing out gets filled into some product type
-  print $ biparse (each $ int /\ char) $ "12,13,14." -- Just ([(12,','),(13,','),(14,'.')],"")
+  print $ biparse (each $ int /\ char) $ "12,13,14."                  -- Just ([(12,','),(13,','),(14,'.')],"")
+  print $ biprint (each $ int /\ char) $ [(12,','),(13,','),(14,'.')] -- Just ([(12,','),(13,','),(14,'.')],"12,13,14.")
 
   -- etc. etc. etc. You find the rest of the patterns
 
