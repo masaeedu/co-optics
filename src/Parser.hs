@@ -2,8 +2,6 @@ module Parser where
 
 import MyPrelude
 
-import Debug.Trace
-
 import Data.Bifunctor.Joker
 import Data.Bifunctor.Product (Product(..))
 
@@ -50,7 +48,7 @@ char = biparser r w
   r = do
     s <- get
     case s of
-      [] -> StateT $ const Nothing
+      [] -> throwError ()
       (c : s') -> do
         put s'
         pure $ c
