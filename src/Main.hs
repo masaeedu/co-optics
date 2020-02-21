@@ -69,7 +69,7 @@ testBiparsing = do
     digits = each digit
 
   -- Try it out forwards...
-  print $ biparse digits $ "12..." -- > Just ([DecDigit1, DecDigit2], "...")
+  print $ biparse digits $ "12..."                -- > Just ([DecDigit1, DecDigit2], "...")
   -- ...and backwards
   print $ biprint digits $ [DecDigit4, DecDigit2] -- > Just ([DecDigit4, DecDigit2], "42")
 
