@@ -181,7 +181,8 @@ testBiparsing = do
   -- Ok, so far we've been dealing with totally static parsing. Now let's look at dynamic (monadic)
   -- parsing
 
-  -- Let's say we have this combinator that lets us replicate a parser some given number of times
+  -- Let's say we want to parse a number, followed by a space, followed by precisely that many characters
+  -- Here's how we can do it
   let
     string :: Biparser' Maybe String
     string = do
