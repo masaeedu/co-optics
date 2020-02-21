@@ -2,17 +2,11 @@ module Parser where
 
 import MyPrelude
 
-import GHC.Natural
-
 import Data.Bifunctor.Joker
 import Data.Bifunctor.Product (Product(..))
 
-import Data.List.NonEmpty
-
-import Control.Monad.State.Lazy (StateT(..), get, put)
-import Control.Monad.Writer.Lazy (WriterT(..), tell)
-
-import Data.Digit (DecDigit, charDecimal)
+import Control.Monad.State.Lazy (StateT(..))
+import Control.Monad.Writer.Lazy (WriterT(..))
 
 import Profunctor.Kleisli
 

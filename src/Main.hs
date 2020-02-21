@@ -136,7 +136,5 @@ main = do
   print $ biparse (each $ int /\ char) $ "12,13,14."                  -- Just ([(12,','),(13,','),(14,'.')],"")
   print $ biprint (each $ int /\ char) $ [(12,','),(13,','),(14,'.')] -- Just ([(12,','),(13,','),(14,'.')],"12,13,14.")
 
-  -- etc. etc. etc. You find the rest of the patterns
-
   -- * This is actually just a new pair of general purpose abstractions for profunctors, biparsers are just one instance
   -- See @Mux@ and @Demux@ in the repo
