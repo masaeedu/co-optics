@@ -10,33 +10,31 @@ import Data.Profunctor (Profunctor(..))
 import Data.Map.Strict (Map, fromList)
 import Control.Monad.State.Lazy
 import Control.Monad.Writer.Lazy
+import Data.Proxy
 
 import Data.Digit (DecDigit(..))
 
 import Optics
 
-import Profunctor.Re ()
-import Profunctor.Joker ()
 import Profunctor.Mux
 import Profunctor.Demux
-import Profunctor.Product
+import Profunctor.Product ()
 import Profunctor.Muxable
 
-import Monoidal.Filterable ()
 import Monoidal.Applicative
 import Monoidal.Alternative
 
 import Parser
 
-testBiparsing :: IO ()
-testBiparsing = do
+testBiparsing :: Biparseable f => Proxy f -> IO ()
+testBiparsing (_ :: Proxy f) = do
   let
     -- A biparser that parses one character
-    char :: Biparser' Maybe Char
+    char :: Biparser f Char Char
     char = biparser r w
       where
-      r = get >>= \case { [] -> empty; (c : xs) -> c <$ put xs }
-      w c = c <$ tell [c]
+      r = StateT $ \case { [] -> empty; (c : xs) -> pure (c, xs) }
+      w c = WriterT $ pure (c, [c])
 
   -- It turns out we can get pretty far with this one humble biparser
   -- and a truckload of profunctor optics
@@ -51,7 +49,7 @@ testBiparsing = do
 
   -- We can run this backwards on our @char@ biparser to get:
   let
-    digit :: Biparser' Maybe DecDigit
+    digit :: Biparser' f DecDigit
     digit = re c2d $ char
 
   -- This can be used to parse a digit out of a string
@@ -68,7 +66,7 @@ testBiparsing = do
   -- For example, we can use the @each@ traversal to build a biparser for a
   -- list of digits
   let
-    digits :: Biparser' Maybe [DecDigit]
+    digits :: Biparser' f [DecDigit]
     digits = each digit
 
   -- Try it out forwards...
@@ -85,7 +83,7 @@ testBiparsing = do
   -- E.g. we might want to first try parsing a digit, then fall back to parsing an
   -- arbitrary character
   let
-    digitOrChar :: Biparser' Maybe (Either DecDigit Char)
+    digitOrChar :: Biparser' f (Either DecDigit Char)
     digitOrChar = digit \/ char
 
   -- Try it out on some inputs
@@ -99,7 +97,7 @@ testBiparsing = do
   -- For the sake of example, let's run our @digits@ biparser through more
   -- coprisms until it turns into a biparser of natural numbers
   let
-    nat :: Biparser' Maybe Natural
+    nat :: Biparser' f Natural
     nat = re (asNonEmpty . digits2int) $ digits
 
   -- Let's see if it works
@@ -124,7 +122,7 @@ testBiparsing = do
 
   -- Here's an example where we use this technique to model a list
   let
-    delimitedInts :: Biparser' Maybe [(Natural, Char)]
+    delimitedInts :: Biparser' f [(Natural, Char)]
     delimitedInts = each $ nat /\ char
 
   print $ biparse delimitedInts $ "12,13,14."                  -- > Just ([(12,','),(13,','),(14,'.')],"")
@@ -140,10 +138,10 @@ testBiparsing = do
     char2space :: Prism' Char Char
     char2space = prism id (\case { ' ' -> Right ' '; c -> Left c })
 
-    space :: Biparser' Maybe Char
+    space :: Biparser' f Char
     space = re char2space char
 
-    spacesThenChar :: Biparser' Maybe (String, Char)
+    spacesThenChar :: Biparser' f (String, Char)
     spacesThenChar = each space /\ char
 
   -- It works like this
@@ -155,7 +153,7 @@ testBiparsing = do
   -- we can make is adjust the output end of the biparser, leaving the input end untouched
   let
     -- Note how the resulting biparser has a asymmetric type
-    spacesThenChar' :: Biparser Maybe (String, Char) Char
+    spacesThenChar' :: Biparser f (String, Char) Char
     spacesThenChar' = rmap snd spacesThenChar
 
   -- Now our parsing output only contains the stuff we care about for further manipulation
@@ -171,7 +169,7 @@ testBiparsing = do
 
   -- We can use a split monomorphism (aka a one sided inverse) to discard this structure entirely
   let
-    spacesThenChar'' :: Biparser' Maybe Char
+    spacesThenChar'' :: Biparser' f Char
     spacesThenChar'' = discard spacesThenChar
       where
       discard :: Iso' Char (String, Char)
@@ -188,7 +186,7 @@ testBiparsing = do
   -- Let's say we want to parse a number, followed by a space, followed by precisely that many characters
   -- Here's how we can do it
   let
-    string :: Biparser' Maybe String
+    string :: Biparser' f String
     string = do
       n  <- nat   & lmap (intToNatural . length)
       _  <- space & lmap (const ' ')
@@ -257,5 +255,5 @@ miscCoprismStuff = do
 
 main :: IO ()
 main = do
-  testBiparsing
+  testBiparsing (Proxy @Maybe)
   miscCoprismStuff

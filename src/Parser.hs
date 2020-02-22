@@ -1,6 +1,9 @@
+{-# LANGUAGE ImpredicativeTypes #-}
 module Parser where
 
 import MyPrelude
+
+import GHC.Exts
 
 import Data.Bifunctor.Joker
 import Data.Bifunctor.Product (Product(..))
@@ -9,6 +12,10 @@ import Control.Monad.State.Lazy (StateT(..))
 import Control.Monad.Writer.Lazy (WriterT(..))
 
 import Profunctor.Kleisli
+
+import Monoidal.Filterable
+import Monoidal.Applicative
+import Monoidal.Alternative
 
 type Parser   f = Joker (StateT String f)
 type Printer  f = Kleisli (WriterT String f)
@@ -35,3 +42,5 @@ biparse = runParser . parser
 
 biprint :: Biparser f i o -> i -> f (o, String)
 biprint = runPrinter . printer
+
+type Biparseable f = (Applicative f, Alternative f, Filterable f, (forall a. Show a => Show (f a) :: Constraint), Monad f)
