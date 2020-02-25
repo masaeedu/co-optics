@@ -25,9 +25,9 @@ import Monoidal.Alternative
 
 import Optics
 
-type Parser   f = Joker (StateT String f)
-type Printer  f = Kleisli (WriterT String f)
-type Biparser f = Product (Parser f) (Printer f)
+type Parser    f   = Joker (StateT String f)
+type Printer   f   = Kleisli (WriterT String f)
+type Biparser  f   = Product (Parser f) (Printer f)
 type Biparser' f x = Biparser f x x
 
 biparser :: StateT String f o -> (i -> WriterT String f o) -> Biparser f i o
