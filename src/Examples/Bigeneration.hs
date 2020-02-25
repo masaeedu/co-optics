@@ -54,8 +54,8 @@ testBigeneration = do
 
   let sevenToTen = re (bounded 7 10) int
   let ranges = twoToFive \/ sevenToTen
-  sample $ bigenerate $ ranges
 
+  sample $ bigenerate $ ranges
   sample $ bigenerate $ bundle $ replicate 2 ranges
 
   pure ()
