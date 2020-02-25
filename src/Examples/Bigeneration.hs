@@ -15,8 +15,6 @@ import Profunctor.Mux
 import Profunctor.Demux
 import Profunctor.Muxable
 
-import Monoidal.Applicative
-
 import Optics
 type Generator      = Joker Gen
 type Check          = Kleisli Maybe
@@ -57,5 +55,3 @@ testBigeneration = do
 
   sample $ bigenerate $ ranges
   sample $ bigenerate $ bundle $ replicate 2 ranges
-
-  pure ()
