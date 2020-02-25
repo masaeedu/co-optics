@@ -2,31 +2,20 @@
 module Main where
 
 import MyPrelude
-import qualified Prelude as P
-
-import GHC.Natural
 
 import Data.Profunctor (Profunctor(..))
 import Data.Map.Strict (Map, fromList)
 import Control.Monad.State.Lazy
-import Control.Monad.Writer.Lazy
-
-import Data.Digit (DecDigit(..))
 
 import Optics
 
 import Profunctor.Re ()
 import Profunctor.Joker ()
-import Profunctor.Mux
-import Profunctor.Demux
-import Profunctor.Product
-import Profunctor.Muxable
 
 import Monoidal.Filterable ()
 import Monoidal.Applicative
-import Monoidal.Alternative
 
-import Parser
+import Examples.Biparsing
 
 miscCoprismStuff :: IO ()
 miscCoprismStuff = do

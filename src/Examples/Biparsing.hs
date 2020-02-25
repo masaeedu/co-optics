@@ -1,5 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
-module Parser where
+module Examples.Biparsing where
 
 import MyPrelude
 
