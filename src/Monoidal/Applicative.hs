@@ -2,6 +2,8 @@ module Monoidal.Applicative where
 
 import MyPrelude
 
+import qualified Control.Applicative as A
+
 import Control.Monad.State.Lazy
 import Control.Monad.Writer.Lazy
 import Data.Bifunctor
@@ -13,6 +15,11 @@ class Functor f => Apply f
 class Apply f => Applicative f
   where
   pure:: a -> f a
+
+instance {-# OVERLAPPABLE #-} (Functor f, Applicative f) => A.Applicative f
+  where
+  (<*>) = (<*>)
+  pure = pure
 
 liftA2 :: Apply f => (a -> b -> c) -> f a -> f b -> f c
 liftA2 f fa fb = uncurry f <$> fa `zip` fb
