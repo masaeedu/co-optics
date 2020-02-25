@@ -17,7 +17,7 @@ import Data.Digit (DecDigit(..))
 import Profunctor.Kleisli
 import Profunctor.Mux
 import Profunctor.Demux
-import Profunctor.Product ()
+import Profunctor.Product
 import Profunctor.Muxable
 
 import Monoidal.Applicative
@@ -33,23 +33,17 @@ type Biparser' f x = Biparser f x x
 biparser :: StateT String f o -> (i -> WriterT String f o) -> Biparser f i o
 biparser x y = Pair (Joker x) (Kleisli y)
 
-parser :: Biparser f i o -> Parser f i o
-parser (Pair p _) = p
-
 runParser :: Parser f i o -> String -> f (o, String)
 runParser = runStateT . runJoker
-
-printer :: Biparser f i o -> Printer f i o
-printer (Pair _ p) = p
 
 runPrinter :: Printer f i o -> i -> f (o, String)
 runPrinter = (runWriterT .) . runKleisli
 
 biparse :: Biparser f i o -> String -> f (o, String)
-biparse = runParser . parser
+biparse = runParser . pfst
 
 biprint :: Biparser f i o -> i -> f (o, String)
-biprint = runPrinter . printer
+biprint = runPrinter . psnd
 
 testBiparsing :: IO ()
 testBiparsing = do
@@ -224,4 +218,3 @@ testBiparsing = do
 
   -- [1] - These combinators actually don't have anything to do with biparsers specifically, biparsers are just one
   --       type of profunctor they can be instantiated at. See @Mux@ and @Demux@ in the repo for the general classes
-
