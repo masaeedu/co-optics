@@ -42,15 +42,15 @@ testBigeneration :: IO ()
 testBigeneration = do
   let twoToFive = re (bounded 2 5) $ int
 
-  sample $ bigenerate $ twoToFive -- [4, 3, 5]
-  print $ bicheck twoToFive $ 8 -- Nothing
-  print $ bicheck twoToFive $ 4 -- Just 4
+  sample $ bigenerate $ twoToFive
+  print $ bicheck twoToFive $ 8
+  print $ bicheck twoToFive $ 4
 
   let twoToFives = twoToFive /\ twoToFive
 
-  sample $ bigenerate $ twoToFives -- [(2,3),(5,2),(4,4)]
-  print $ bicheck twoToFives $ (8, 1) -- Nothing
-  print $ bicheck twoToFives $ (2, 4) -- Just (2, 4)
+  sample $ bigenerate $ twoToFives
+  print $ bicheck twoToFives $ (8, 1)
+  print $ bicheck twoToFives $ (2, 4)
 
   let sevenToTen = re (bounded 7 10) int
   let ranges = twoToFive \/ sevenToTen
