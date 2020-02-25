@@ -2,9 +2,10 @@ module Profunctor.Lazy where
 
 import MyPrelude
 
-import Data.Bifunctor.Joker
 import Data.Bifunctor.Product
+
 import Profunctor.Kleisli
+import Profunctor.Joker
 
 class Lazy x
   where

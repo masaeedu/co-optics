@@ -6,7 +6,6 @@ import MyPrelude
 import GHC.Natural (Natural, intToNatural, naturalToInt)
 
 import Data.Profunctor (Profunctor(..))
-import Data.Bifunctor.Joker
 import Data.Bifunctor.Product (Product(..))
 
 import Control.Monad.State.Lazy (StateT(..), get, put)
@@ -14,6 +13,7 @@ import Control.Monad.Writer.Lazy (WriterT(..), tell)
 
 import Data.Digit (DecDigit(..))
 
+import Profunctor.Joker
 import Profunctor.Kleisli
 import Profunctor.Mux
 import Profunctor.Demux

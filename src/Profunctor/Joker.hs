@@ -1,4 +1,8 @@
-module Profunctor.Joker where
+module Profunctor.Joker
+  ( module Profunctor.Joker
+  , Joker(..)
+  )
+  where
 
 import MyPrelude
 

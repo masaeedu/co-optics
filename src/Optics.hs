@@ -7,7 +7,6 @@ import GHC.Natural
 
 import Data.Profunctor (Profunctor(..), Strong(..), Costrong(..), Choice(..), Cochoice(..))
 import Data.Bifunctor (first, second)
-import Data.Bifunctor.Joker (Joker(..))
 import Data.Functor.Identity (Identity(..))
 
 import Data.List.NonEmpty (NonEmpty(..), toList)
@@ -18,7 +17,7 @@ import Monoidal.Applicative
 import Monoidal.Decisive
 import Monoidal.Filterable
 
-import Profunctor.Joker ()
+import Profunctor.Joker
 import Profunctor.Re
 import Profunctor.Kleisli
 import Profunctor.Mux

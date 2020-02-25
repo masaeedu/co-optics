@@ -1,4 +1,8 @@
-module Profunctor.Product where
+module Profunctor.Product
+  ( module Profunctor.Product
+  , Product(..)
+  )
+  where
 
 import MyPrelude
 

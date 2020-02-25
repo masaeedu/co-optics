@@ -3,10 +3,10 @@ module Profunctor.Demux where
 import MyPrelude
 
 import Data.Profunctor
-import Data.Bifunctor.Joker
 import Data.Bifunctor.Product
 import Data.Void
 
+import Profunctor.Joker
 import Profunctor.Kleisli
 import Monoidal.Alternative
 

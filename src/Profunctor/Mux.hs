@@ -3,9 +3,9 @@ module Profunctor.Mux where
 import MyPrelude
 
 import Data.Profunctor
-import Data.Bifunctor.Joker
 import Data.Bifunctor.Product
 
+import Profunctor.Joker
 import Profunctor.Kleisli
 import Monoidal.Applicative
 
