@@ -1,6 +1,5 @@
 module Profunctor.Joker
-  ( module Profunctor.Joker
-  , Joker(..)
+  ( Joker(..)
   )
   where
 
