@@ -15,6 +15,7 @@ dependencies:
   - transformers
   - mtl
   - digit
+  - QuickCheck
 
 ghc-options: [-Wall]
 default-extensions:

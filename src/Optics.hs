@@ -138,6 +138,9 @@ match p = _match $ p mkt_id
 liftPrism :: Decide f => Prism s t a b -> Prism (f s) (f t) (f a) (f b)
 liftPrism p = prism (fmap $ build p) (decide . fmap (match p))
 
+predicate :: (a -> Bool) -> Prism' a a
+predicate f = prism id (\x -> if f x then Right x else Left x)
+
 _Just :: Prism (Maybe a) (Maybe b) a b
 _Just = prism Just (maybe (Left Nothing) Right)
 
@@ -149,6 +152,9 @@ digits2int = convert _NaturalDigits
 
 asNonEmpty :: Prism [a] [b] (NonEmpty a) (NonEmpty b)
 asNonEmpty = prism toList (\case { [] -> Left []; (x : xs) -> Right $ x :| xs })
+
+bounded ::  Int -> Int -> Prism' Int Int
+bounded l h = predicate (\i -> i <= h && i >= l)
 
 -- Traversals
 newtype Bazaar a b s t = Bazaar { runBazaar :: forall f. Applicative f => (a -> f b) -> s -> f t }

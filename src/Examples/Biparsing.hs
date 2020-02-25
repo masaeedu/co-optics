@@ -33,17 +33,11 @@ type Biparser' f x = Biparser f x x
 biparser :: StateT String f o -> (i -> WriterT String f o) -> Biparser f i o
 biparser x y = Pair (Joker x) (Kleisli y)
 
-runParser :: Parser f i o -> String -> f (o, String)
-runParser = runStateT . runJoker
-
-runPrinter :: Printer f i o -> i -> f (o, String)
-runPrinter = (runWriterT .) . runKleisli
-
 biparse :: Biparser f i o -> String -> f (o, String)
-biparse = runParser . pfst
+biparse = runStateT . runJoker . pfst
 
 biprint :: Biparser f i o -> i -> f (o, String)
-biprint = runPrinter . psnd
+biprint = (runWriterT .) . runKleisli . psnd
 
 testBiparsing :: IO ()
 testBiparsing = do

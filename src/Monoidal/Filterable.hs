@@ -3,10 +3,14 @@ module Monoidal.Filterable where
 import MyPrelude
 
 import Data.Bifunctor (first, second, bimap)
-import Data.Map.Strict (Map, foldrWithKey, empty, insert)
+import Data.Tuple (swap)
+
 import Control.Monad.State.Lazy (StateT(..))
 import Control.Monad.Writer.Lazy (WriterT(..))
-import Data.Tuple (swap)
+
+import Data.Map.Strict (Map, foldrWithKey, empty, insert)
+
+import Test.QuickCheck.Gen
 
 import Monoidal.Decisive
 
@@ -58,3 +62,7 @@ instance Filterable m => Filterable (WriterT w m)
 
     bwd :: Functor m => m (w, a) -> WriterT w m a
     bwd = WriterT . fmap swap
+
+instance Filterable Gen
+  where
+  partition g = (suchThatMap g $ either Just (const Nothing), suchThatMap g $ either (const Nothing) Just)

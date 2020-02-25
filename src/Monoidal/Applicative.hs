@@ -4,9 +4,11 @@ import MyPrelude
 
 import qualified Control.Applicative as A
 
+import Data.Bifunctor
+
 import Control.Monad.State.Lazy
 import Control.Monad.Writer.Lazy
-import Data.Bifunctor
+import Test.QuickCheck
 
 class Functor f => Apply f
   where
@@ -21,6 +23,17 @@ instance {-# OVERLAPPABLE #-} (Functor f, Applicative f) => A.Applicative f
   (<*>) = (<*>)
   pure = pure
 
+newtype BaseApplicative f a = BaseApplicative { runBaseApplicative :: f a }
+  deriving (Functor, A.Applicative)
+
+instance A.Applicative f => Apply (BaseApplicative f)
+  where
+  x `zip` y = A.liftA2 (,) x y
+
+instance A.Applicative f => Applicative (BaseApplicative f)
+  where
+  pure = A.pure
+
 liftA2 :: Apply f => (a -> b -> c) -> f a -> f b -> f c
 liftA2 f fa fb = uncurry f <$> fa `zip` fb
 
@@ -32,32 +45,14 @@ infixl 4 *>
 (*>) :: Apply f => f a -> f b -> f b
 f *> a = (const id <$> f) <*> a
 
-instance Apply Maybe
-  where
-  Nothing `zip` _       = Nothing
-  _       `zip` Nothing = Nothing
-  Just x  `zip` Just y  = Just (x, y)
+deriving via (BaseApplicative Maybe) instance Apply Maybe
+deriving via (BaseApplicative Maybe) instance Applicative Maybe
 
-instance Applicative Maybe
-  where
-  pure = Just
+deriving via (BaseApplicative []) instance Apply []
+deriving via (BaseApplicative []) instance Applicative []
 
-instance Apply []
-  where
-  [] `zip` _ = []
-  (x : xs) `zip` ys = ((x, ) <$> ys) ++ zip xs ys
-
-instance Applicative []
-  where
-  pure = (:[])
-
-instance Monad m => Apply (StateT s m)
-  where
-  StateT x `zip` StateT y = StateT $ \s -> x s >>= \(a, s') -> fmap (first (a,)) $ y s'
-
-instance Monad m => Applicative (StateT s m)
-  where
-  pure a = StateT $ \s -> return $ (a, s)
+deriving via (BaseApplicative (StateT s m)) instance Monad m => Apply (StateT s m)
+deriving via (BaseApplicative (StateT s m)) instance Monad m => Applicative (StateT s m)
 
 instance (Apply m, Semigroup w) => Apply (WriterT w m)
   where
@@ -67,8 +62,8 @@ instance (Applicative m, Monoid w) => Applicative (WriterT w m)
   where
   pure a = WriterT $ fmap (, mempty) $ pure a
 
-instance Apply IO where
-  fa `zip` fb = fa >>= \a -> fb >>= \b -> return (a, b)
+deriving via (BaseApplicative IO) instance Apply IO
+deriving via (BaseApplicative IO) instance Applicative IO
 
-instance Applicative IO where
-  pure = return
+deriving via (BaseApplicative Gen) instance Apply Gen
+deriving via (BaseApplicative Gen) instance Applicative Gen
