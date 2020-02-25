@@ -8,7 +8,9 @@ import Data.Bifunctor
 
 import Control.Monad.State.Lazy
 import Control.Monad.Writer.Lazy
-import Test.QuickCheck
+import Hedgehog
+
+import Monoidal.BaseFunctor
 
 class Functor f => Apply f
   where
@@ -23,14 +25,11 @@ instance {-# OVERLAPPABLE #-} (Functor f, Applicative f) => A.Applicative f
   (<*>) = (<*>)
   pure = pure
 
-newtype BaseApplicative f a = BaseApplicative { runBaseApplicative :: f a }
-  deriving (Functor, A.Applicative)
-
-instance A.Applicative f => Apply (BaseApplicative f)
+instance A.Applicative f => Apply (BaseFunctor f)
   where
   x `zip` y = A.liftA2 (,) x y
 
-instance A.Applicative f => Applicative (BaseApplicative f)
+instance A.Applicative f => Applicative (BaseFunctor f)
   where
   pure = A.pure
 
@@ -45,14 +44,14 @@ infixl 4 *>
 (*>) :: Apply f => f a -> f b -> f b
 f *> a = (const id <$> f) <*> a
 
-deriving via (BaseApplicative Maybe) instance Apply Maybe
-deriving via (BaseApplicative Maybe) instance Applicative Maybe
+deriving via (BaseFunctor Maybe) instance Apply Maybe
+deriving via (BaseFunctor Maybe) instance Applicative Maybe
 
-deriving via (BaseApplicative []) instance Apply []
-deriving via (BaseApplicative []) instance Applicative []
+deriving via (BaseFunctor []) instance Apply []
+deriving via (BaseFunctor []) instance Applicative []
 
-deriving via (BaseApplicative (StateT s m)) instance Monad m => Apply (StateT s m)
-deriving via (BaseApplicative (StateT s m)) instance Monad m => Applicative (StateT s m)
+deriving via (BaseFunctor (StateT s m)) instance Monad m => Apply (StateT s m)
+deriving via (BaseFunctor (StateT s m)) instance Monad m => Applicative (StateT s m)
 
 instance (Apply m, Semigroup w) => Apply (WriterT w m)
   where
@@ -62,8 +61,8 @@ instance (Applicative m, Monoid w) => Applicative (WriterT w m)
   where
   pure a = WriterT $ fmap (, mempty) $ pure a
 
-deriving via (BaseApplicative IO) instance Apply IO
-deriving via (BaseApplicative IO) instance Applicative IO
+deriving via (BaseFunctor IO) instance Apply IO
+deriving via (BaseFunctor IO) instance Applicative IO
 
-deriving via (BaseApplicative Gen) instance Apply Gen
-deriving via (BaseApplicative Gen) instance Applicative Gen
+deriving via (BaseFunctor Gen) instance Apply Gen
+deriving via (BaseFunctor Gen) instance Applicative Gen

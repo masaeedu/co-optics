@@ -2,9 +2,16 @@ module Monoidal.Alternative where
 
 import MyPrelude
 
+import qualified Control.Applicative as A
+
+import Data.Bifunctor
+
 import Control.Monad.State.Lazy
 import Control.Monad.Writer.Lazy (WriterT(..))
-import Data.Bifunctor
+
+import Hedgehog
+
+import Monoidal.BaseFunctor
 
 class Functor f => Alt f
   where
@@ -14,22 +21,24 @@ class Alt f => Alternative f
   where
   empty :: f a
 
-instance Alt Maybe
+instance {-# OVERLAPPABLE #-} (A.Applicative f, Alternative f) => A.Alternative f
   where
-  Nothing <|> a = Right <$> a
-  a       <|> _ = Left  <$> a
+  empty = empty
+  f <|> g = fmap (either id id) $ f <|> g
 
-instance Alternative Maybe
+instance A.Alternative f => Alt (BaseFunctor f)
   where
-  empty = Nothing
+  f <|> g = (Left <$> f) A.<|> (Right <$> g)
 
-instance Alt []
+instance A.Alternative f => Alternative (BaseFunctor f)
   where
-  xs <|> ys = (Left <$> xs) ++ (Right <$> ys)
+  empty = A.empty
 
-instance Alternative []
-  where
-  empty = []
+deriving via (BaseFunctor Maybe) instance Alt Maybe
+deriving via (BaseFunctor Maybe) instance Alternative Maybe
+
+deriving via (BaseFunctor []) instance Alt []
+deriving via (BaseFunctor []) instance Alternative []
 
 instance Alt f => Alt (StateT s f)
   where
@@ -46,3 +55,6 @@ instance Alt f => Alt (WriterT s f)
 instance Alternative f => Alternative (WriterT s f)
   where
   empty = WriterT $ empty
+
+deriving via (BaseFunctor Gen) instance Alt Gen
+deriving via (BaseFunctor Gen) instance Alternative Gen

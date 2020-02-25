@@ -8,15 +8,24 @@ import Data.Tuple (swap)
 import Control.Monad.State.Lazy (StateT(..))
 import Control.Monad.Writer.Lazy (WriterT(..))
 
-import Data.Map.Strict (Map, foldrWithKey, empty, insert)
+import qualified Data.Map.Strict as M (Map, foldrWithKey, empty, insert)
 
-import Test.QuickCheck.Gen
+import Hedgehog
 
+import Monoidal.Applicative
+import Monoidal.Alternative
 import Monoidal.Decisive
 
 class Functor f => Filterable f
   where
   partition :: f (Either a b) -> (f a, f b)
+
+newtype Dynamic f a = Dynamic { runDynamic :: f a }
+  deriving (Functor, Apply, Applicative, Alt, Alternative, Monad)
+
+instance (Monad m, Applicative m, Alternative m) => Filterable (Dynamic m)
+  where
+  partition m = (m >>= either pure (const empty), m >>= either (const empty) pure)
 
 instance Filterable []
   where
@@ -30,9 +39,9 @@ instance Filterable Maybe
   partition (Just (Left a)) = (Just a, Nothing)
   partition (Just (Right b)) = (Nothing, Just b)
 
-instance Ord k => Filterable (Map k)
+instance Ord k => Filterable (M.Map k)
   where
-  partition = foldrWithKey (\k -> either (first . insert k) (second . insert k)) (empty, empty)
+  partition = M.foldrWithKey (\k -> either (first . M.insert k) (second . M.insert k)) (M.empty, M.empty)
 
 trivial :: Functor f => f (a, b) -> (f a, f b)
 trivial fab = (fmap fst fab, fmap snd fab)
@@ -63,6 +72,4 @@ instance Filterable m => Filterable (WriterT w m)
     bwd :: Functor m => m (w, a) -> WriterT w m a
     bwd = WriterT . fmap swap
 
-instance Filterable Gen
-  where
-  partition g = (suchThatMap g $ either Just (const Nothing), suchThatMap g $ either (const Nothing) Just)
+deriving via (Dynamic Gen) instance Filterable Gen

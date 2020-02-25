@@ -16,6 +16,7 @@ dependencies:
   - mtl
   - digit
   - QuickCheck
+  - hedgehog
 
 ghc-options: [-Wall]
 default-extensions:
