@@ -47,7 +47,7 @@ assocE = dimap
   (either (Left . Left) (either (Left . Right) Right))
   (either (either Left (Right . Left)) (Right . Right))
 
-symmE :: Iso' (Either a b) (Either b a)
+symmE :: Iso (Either a b) (Either c d) (Either b a) (Either d c)
 symmE = dimap
   (either Right Left)
   (either Right Left)
@@ -78,6 +78,15 @@ bwd f = _bwd (f exch_id)
 liftIso :: Functor f => Iso s t a b -> Iso (f s) (f t) (f a) (f b)
 liftIso i = iso (fmap $ fwd i) (fmap $ bwd i)
 
+uncons :: Iso [a] [b] (Maybe (a, [a])) (Maybe (b, [b]))
+uncons = iso (\case { [] -> Nothing; (x : xs) -> Just (x, xs) }) (maybe [] (uncurry (:)))
+
+m2e :: Iso (Maybe a) (Maybe b) (Either () a) (Either () b)
+m2e = iso (maybe (Left ()) Right) (either (const Nothing) Just)
+
+distinguish :: (a -> Bool) -> Iso a b (Either a a) (Either b b)
+distinguish p = iso (\a -> if p a then Left a else Right a) (either id id)
+
 -- Lenses
 data Shop a b s t = Shop { _view :: s -> a, _update :: s -> b -> t }
 
@@ -103,12 +112,6 @@ update l = _update $ l shp_id
 
 liftLens :: Apply f => Lens s t a b -> Lens (f s) (f t) (f a) (f b)
 liftLens l = lens (fmap $ view l) (liftA2 $ update l)
-
-uncons :: Iso [a] [b] (Maybe (a, [a])) (Maybe (b, [b]))
-uncons = iso (\case { [] -> Nothing; (x : xs) -> Just (x, xs) }) (maybe [] (uncurry (:)))
-
-m2e :: Iso (Maybe a) (Maybe b) (Either () a) (Either () b)
-m2e = iso (maybe (Left ()) Right) (either (const Nothing) Just)
 
 -- Prisms
 data Market a b s t = Market { _build :: b -> t, _match :: s -> Either t a }
@@ -140,6 +143,12 @@ liftPrism p = prism (fmap $ build p) (decide . fmap (match p))
 
 predicate :: (a -> Bool) -> Prism' a a
 predicate f = prism id (\x -> if f x then Right x else Left x)
+
+exactly :: Eq a => a -> Prism' a a
+exactly a = predicate (== a)
+
+among :: Eq a => [a] -> Prism' a a
+among as = predicate (`elem` as)
 
 _Just :: Prism (Maybe a) (Maybe b) a b
 _Just = prism Just (maybe (Left Nothing) Right)
@@ -198,7 +207,7 @@ instance Applicative (Bazaar a b s)
   pure a = Bazaar $ \_ _ -> pure a
 
 each :: (Demux p, Visitor p, Lazy2 p) => Optic p [a] [b] a b
-each pab = uncons $ m2e $ dimap (either Right Left) (either Right Left) $ (\/ start) $ (pab /\) $ defer $ \_ -> each pab
+each pab = uncons $ m2e $ symmE $ (\/ start) $ (pab /\) $ defer $ \_ -> each pab
 
 -- Reversals
 re :: Optic (Re p a b) s t a b -> Optic p b a t s

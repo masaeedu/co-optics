@@ -13,6 +13,18 @@ class Profunctor p => Mux p
   where
   (/\) :: p a b -> p c d -> p (a, c) (b, d)
 
+infixr 4 /\
+
+(/-) :: Mux p => p a b -> p () d -> p a b
+x /- y = dimap (, ()) fst $ x /\ y
+
+infixr 4 /-
+
+(-\) :: Mux p => p () b -> p c d -> p c d
+x -\ y = dimap ((), ) snd $ x /\ y
+
+infixr 4 -\
+
 class Mux p => Visitor p
   where
   start :: p a ()

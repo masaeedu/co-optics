@@ -6,18 +6,15 @@ import MyPrelude
 import GHC.Natural (Natural, intToNatural, naturalToInt)
 
 import Data.Profunctor (Profunctor(..))
-import Data.Bifunctor.Product (Product(..))
-
-import Control.Monad.State.Lazy (StateT(..), get, put)
-import Control.Monad.Writer.Lazy (WriterT(..), tell)
+import Data.Foldable (traverse_)
 
 import Data.Digit (DecDigit(..))
 
-import Profunctor.Joker
-import Profunctor.Kleisli
+import Control.Monad.State (MonadState(..))
+import Control.Monad.Writer (MonadWriter(..))
+
 import Profunctor.Mux
 import Profunctor.Demux
-import Profunctor.Product
 import Profunctor.Muxable
 
 import Monoidal.Applicative
@@ -25,19 +22,8 @@ import Monoidal.Alternative
 
 import Optics
 
-type Parser    f   = Joker (StateT String f)
-type Printer   f   = Kleisli (WriterT String f)
-type Biparser  f   = Product (Parser f) (Printer f)
-type Biparser' f x = Biparser f x x
-
-biparser :: StateT String f o -> (i -> WriterT String f o) -> Biparser f i o
-biparser x y = Pair (Joker x) (Kleisli y)
-
-biparse :: Biparser f i o -> String -> f (o, String)
-biparse = runStateT . runJoker . pfst
-
-biprint :: Biparser f i o -> i -> f (o, String)
-biprint = (runWriterT .) . runKleisli . psnd
+import Examples.Biparsing.Common
+import Examples.Biparsing.JSON
 
 testBiparsing :: IO ()
 testBiparsing = do
@@ -210,5 +196,23 @@ testBiparsing = do
   print $ biparse string $ "6 lambda calculus" -- > Just ("lambda"," calculus")
   print $ biprint string $ "SKI"               -- > Just ("SKI","3 SKI")
 
+  let
+    manyints :: Biparser' Maybe [(Int, Char)]
+    manyints = each (int /\ re (exactly ',') char)
+
+  print $ biparse manyints $ "-10,11,0,--11,foo"
+  print $ biprint manyints $ [(-10, ','), (11, ','), (0, ',')]
+
+  print $ biparse jsonString $ "\"helloworld\""
+  print $ biprint jsonString $ "helloworld"
+
+  print $ biprint jsonString $ "\tfoo\bbar\""
+
+  print $ biparse jsonValue $ "[1, [{ \"foo\": 11 }, 5]]"
+  traverse_ putStrLn $ biprint_ jsonValue =<< biparse_ jsonValue "[1, [{ \"foo\": 11 }, 5]]"
+
   -- [1] - These combinators actually don't have anything to do with biparsers specifically, biparsers are just one
   --       type of profunctor they can be instantiated at. See @Mux@ and @Demux@ in the repo for the general classes
+
+fromJust :: Maybe x -> x
+fromJust (Just x) = x

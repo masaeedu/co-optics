@@ -6,6 +6,8 @@ import qualified Control.Applicative as A
 
 import Data.Bifunctor
 
+import Data.List.NonEmpty (NonEmpty(..))
+
 import Control.Monad.State.Lazy
 import Control.Monad.Writer.Lazy
 import Hedgehog
@@ -66,3 +68,6 @@ deriving via (BaseFunctor IO) instance Applicative IO
 
 deriving via (BaseFunctor Gen) instance Apply Gen
 deriving via (BaseFunctor Gen) instance Applicative Gen
+
+deriving via (BaseFunctor NonEmpty) instance Apply NonEmpty
+deriving via (BaseFunctor NonEmpty) instance Applicative NonEmpty

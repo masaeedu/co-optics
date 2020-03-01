@@ -10,9 +10,17 @@ import Profunctor.Joker
 import Profunctor.Kleisli
 import Monoidal.Alternative
 
+type x + y = Either x y
+
 class Profunctor p => Demux p
   where
-  (\/) ::  p a b -> p c d -> p (Either a c) (Either b d)
+  (\/) ::  p a b -> p c d -> p (a + c) (b + d)
+
+discard :: a -> ()
+discard = const ()
+
+(\\//) :: Demux p => p a b -> p c b -> p (a + c) b
+x \\// y = rmap (either id id) $ x \/ y
 
 class Demux p => Switch p
   where

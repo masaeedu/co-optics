@@ -17,6 +17,8 @@ dependencies:
   - digit
   - QuickCheck
   - hedgehog
+  - lens
+  - generic-lens
 
 ghc-options: [-Wall]
 default-extensions:
