@@ -1,18 +1,19 @@
-{-# LANGUAGE RebindableSyntax, LambdaCase #-}
+{-# LANGUAGE RebindableSyntax #-}
 module Main where
 
 import MyPrelude
 import qualified Prelude as P
 
 import GHC.Natural
+import GHC.Exts
+
+import Data.Digit (DecDigit(..))
 
 import Data.Profunctor (Profunctor(..))
 import Data.Map.Strict (Map, fromList)
 import Control.Monad.State.Lazy
 import Control.Monad.Writer.Lazy
 import Data.Proxy
-
-import Data.Digit (DecDigit(..))
 
 import Optics
 
@@ -26,31 +27,16 @@ import Monoidal.Alternative
 
 import Parser
 
-testBiparsing :: Biparseable f => Proxy f -> IO ()
+type ShowF f = (forall a. Show a => Show (f a) :: Constraint)
+
+testBiparsing :: (StaticParse f, ShowF f, Monad f) => Proxy f -> IO ()
 testBiparsing (_ :: Proxy f) = do
   let
-    -- A biparser that parses one character
-    char :: Biparser f Char Char
-    char = biparser r w
-      where
-      r = StateT $ \case { [] -> empty; (c : xs) -> pure (c, xs) }
-      w c = WriterT $ pure (c, [c])
+    biparse :: Biparser f i o -> String -> f (o, String)
+    biparse = Parser.biparse @f
 
-  -- It turns out we can get pretty far with this one humble biparser
-  -- and a truckload of profunctor optics
-
-  -- Firstly, given an arbitrary prism, we can run it backwards on
-  -- a biparser to focus it onto the successful case of the prism
-
-  -- For example, there is a prism from arbitrary characters to digits
-  -- @@@
-  -- c2d :: Prism' Char DecDigit
-  -- @@@
-
-  -- We can run this backwards on our @char@ biparser to get:
-  let
-    digit :: Biparser' f DecDigit
-    digit = re c2d $ char
+    biprint :: Biparser f i o -> i -> f (o, String)
+    biprint = Parser.biprint @f
 
   -- This can be used to parse a digit out of a string
   print $ biparse digit $ ""   -- > Nothing
@@ -94,11 +80,6 @@ testBiparsing (_ :: Proxy f) = do
   -- How about a mixed list of digits and chars?
   print $ biparse (each digitOrChar) $ "a1b" -- > Just ([Right 'a',Left DecDigit1,Right 'b'],"")
 
-  -- For the sake of example, let's run our @digits@ biparser through more
-  -- coprisms until it turns into a biparser of natural numbers
-  let
-    nat :: Biparser' f Natural
-    nat = re (asNonEmpty . digits2int) $ digits
 
   -- Let's see if it works
   print $ biparse nat $ "123131234" -- > Just (123131234,"")
@@ -135,12 +116,6 @@ testBiparsing (_ :: Proxy f) = do
 
   -- Suppose we want to parse a string that has some leading space and then a character
   let
-    char2space :: Prism' Char Char
-    char2space = prism id (\case { ' ' -> Right ' '; c -> Left c })
-
-    space :: Biparser' f Char
-    space = re char2space char
-
     spacesThenChar :: Biparser' f (String, Char)
     spacesThenChar = each space /\ char
 

@@ -47,6 +47,8 @@ default-extensions:
 
   - NoImplicitPrelude
 
+  - LambdaCase
+
 library: {}
 executable:
   main: Main.hs

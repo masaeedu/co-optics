@@ -2,8 +2,6 @@ module Profunctor.Kleisli where
 
 import MyPrelude
 
-import qualified Prelude as P
-
 import Data.Profunctor (Profunctor (..), Strong(..), Choice(..), Cochoice(..))
 
 import Monoidal.Filterable
@@ -31,12 +29,15 @@ instance Functor m => Functor (Kleisli m a)
   where
   fmap f (Kleisli amb) = Kleisli $ fmap f . amb
 
-instance P.Applicative m => P.Applicative (Kleisli m a)
+instance Apply m => Apply (Kleisli m a)
   where
-  Kleisli f <*> Kleisli a = Kleisli $ \x -> f x P.<*> a x
-  pure a = Kleisli $ const $ P.pure a
+  Kleisli f `zip` Kleisli a = Kleisli $ \x -> f x `zip` a x
 
-instance Monad m => Monad (Kleisli m a)
+instance Applicative m => Applicative (Kleisli m a)
   where
-  return = P.pure
+  pure a = Kleisli $ const $ pure a
+
+instance (Applicative m, Monad m) => Monad (Kleisli m a)
+  where
+  return = pure
   Kleisli f >>= amb = Kleisli $ \x -> f x >>= ($ x) . runKleisli . amb

@@ -1,6 +1,8 @@
 module Monoidal.Applicative where
 
 import MyPrelude
+import qualified Prelude as P
+import Control.Applicative ()
 
 import Control.Monad.State.Lazy
 import Control.Monad.Writer.Lazy
@@ -13,6 +15,11 @@ class Functor f => Apply f
 class Apply f => Applicative f
   where
   pure:: a -> f a
+
+instance (Functor f, Applicative f) => P.Applicative f
+  where
+  pure = pure
+  f <*> x = f <*> x
 
 liftA2 :: Apply f => (a -> b -> c) -> f a -> f b -> f c
 liftA2 f fa fb = uncurry f <$> fa `zip` fb
@@ -46,7 +53,7 @@ instance Applicative []
 
 instance Monad m => Apply (StateT s m)
   where
-  StateT x `zip` StateT y = StateT $ \s -> x s >>= \(a, s') -> fmap (first (a,)) $ y s'
+  StateT x `zip` StateT y = StateT $ \s -> x s >>= \(a, s') -> (first (a,)) <$> y s'
 
 instance Monad m => Applicative (StateT s m)
   where
