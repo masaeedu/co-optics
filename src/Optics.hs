@@ -1,15 +1,19 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, DeriveGeneric #-}
 module Optics where
 
 import MyPrelude
 
+import GHC.Generics
 import GHC.Natural
 
+import Data.Char (readLitChar, showLitChar)
 import Data.Profunctor (Profunctor(..), Strong(..), Costrong(..), Choice(..), Cochoice(..))
 import Data.Bifunctor (Bifunctor(..))
 import Data.Functor.Identity (Identity(..))
 
 import Data.List.NonEmpty (NonEmpty(..), toList)
+
+import Data.Generics.Wrapped (_Wrapped)
 
 import Data.Digit (DecDigit, charDecimal, _NaturalDigits)
 
@@ -167,6 +171,21 @@ asNonEmpty = prism toList (\case { [] -> Left []; (x : xs) -> Right $ x :| xs })
 
 bounded ::  Int -> Int -> Prism' Int Int
 bounded l h = predicate (\i -> i <= h && i >= l)
+
+i2n :: Prism' Int Natural
+i2n = prism naturalToInt (\i -> if i < 0 then Left i else Right (intToNatural i))
+
+data Escape = Escape Char
+  deriving (Generic, Show)
+
+-- Convert a character to its escape code
+asEscapeCode :: Prism' Char Escape
+asEscapeCode = convert _Wrapped >>> prism
+  (\c -> fst $ head $ readLitChar $ ['\\', c])
+  (\c -> case showLitChar c "" of
+    { ('\\' : c' : _) -> Right $ c'
+    ; _ -> Left c
+    })
 
 -- Traversals
 newtype Bazaar a b s t = Bazaar { runBazaar :: forall f. Applicative f => (a -> f b) -> s -> f t }

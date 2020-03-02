@@ -3,16 +3,12 @@ module Examples.Biparsing.Common where
 
 import MyPrelude
 
-import GHC.Generics
 import GHC.Natural
 
-import Data.Char (readLitChar, showLitChar)
 import Data.Profunctor
 
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
-
-import Data.Generics.Wrapped (_Wrapped)
 
 import Data.Digit
 
@@ -99,9 +95,6 @@ digit = re (convert charDecimal) $ char
 nat :: Biparser' Maybe Natural
 nat = re (asNonEmpty . digits2int) $ each digit
 
-i2n :: Prism' Int Natural
-i2n = prism naturalToInt (\i -> if i < 0 then Left i else Right (intToNatural i))
-
 int :: Biparser' Maybe Int
 int = do
   s <- sign & lmap (\i -> i >= 0)
@@ -113,15 +106,3 @@ int = do
 
 hexDigit :: Biparser' Maybe HeXDigit
 hexDigit = re (convert charHeXaDeCiMaL) char
-
-data Escape = Escape Char
-  deriving (Generic, Show)
-
--- Convert a character to its escape code
-asEscapeCode :: Prism' Char Escape
-asEscapeCode = convert _Wrapped >>> prism
-  (\c -> fst $ head $ readLitChar $ ['\\', c])
-  (\c -> case showLitChar c "" of
-    { ('\\' : c' : _) -> Right $ c'
-    ; _ -> Left c
-    })
