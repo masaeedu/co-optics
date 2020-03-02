@@ -34,6 +34,20 @@ json = gprod $
   jsonWhitespace /\
   start
 
+-- Parse a character representing a space in a JSON document
+jsonSpaceChar :: Biparser' Maybe SpaceChar
+jsonSpaceChar = gsum $
+  token_ " "  \/
+  token_ "\n" \/
+  token_ "\r" \/
+  token_ "\t" \/ stop
+
+type Whitespace = [SpaceChar]
+
+-- Parse some whitespace in a JSON document
+jsonWhitespace :: Biparser' Maybe Whitespace
+jsonWhitespace = each jsonSpaceChar
+
 data Value = N Number | S String | B Bool | Null | O Object | A Array
   deriving (Generic, Show)
 
@@ -61,20 +75,6 @@ jsonNumber = gprod $
 
 data SpaceChar = Space | LF | CR | Tab
   deriving (Generic, Show)
-
--- Parse a character representing a space in a JSON document
-jsonSpaceChar :: Biparser' Maybe SpaceChar
-jsonSpaceChar = gsum $
-  token_ " "  \/
-  token_ "\n" \/
-  token_ "\r" \/
-  token_ "\t" \/ stop
-
-type Whitespace = [SpaceChar]
-
--- Parse some whitespace in a JSON document
-jsonWhitespace :: Biparser' Maybe Whitespace
-jsonWhitespace = each jsonSpaceChar
 
 -- Parse a normal character in a JSON string (anything but quotes or backslashes)
 jsonNChar :: Biparser' Maybe Char
