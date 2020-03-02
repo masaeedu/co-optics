@@ -7,9 +7,6 @@ import GHC.Natural
 
 import Data.Profunctor
 
-import Data.List.NonEmpty (NonEmpty(..))
-import qualified Data.List.NonEmpty as NE
-
 import Data.Digit
 
 import Control.Monad.State (StateT(..), MonadState(..))
@@ -21,7 +18,6 @@ import Profunctor.Product
 import Profunctor.Mux
 import Profunctor.Demux
 import Profunctor.Muxable
-import Profunctor.Lazy
 
 import Monoidal.Applicative
 import Monoidal.Alternative
@@ -67,18 +63,7 @@ trivial :: Biparser' Maybe ()
 trivial = start
 
 perhaps :: Biparser' Maybe x -> Biparser' Maybe (Maybe x)
-perhaps p = m2e . symmE $ p \/ trivial
-
-separated :: Biparser Maybe () x -> Biparser' Maybe y -> Biparser' Maybe (NonEmpty y)
-separated s v = rec
-  where
-  rec = asNE $ ((v // s) /\ (defer $ \_ -> rec)) \/ v
-    where
-    asNE :: Iso' (NonEmpty x) ((x, NonEmpty x) + x)
-    asNE = iso f b
-      where
-      f (NE.uncons -> (x, xs)) = case xs of { Nothing -> Right x; Just xs' -> Left (x, xs') }
-      b = either (uncurry NE.cons) pure
+perhaps p = maybeToEither . symmE $ p \/ trivial
 
 sign :: Biparser' Maybe Bool
 sign = perhaps (re (exactly '-') char) & dimap sign2char char2sign
@@ -93,7 +78,7 @@ digit :: Biparser' Maybe DecDigit
 digit = re (convert charDecimal) $ char
 
 nat :: Biparser' Maybe Natural
-nat = re (asNonEmpty . digits2int) $ each digit
+nat = re (asNonEmpty . digits2int) $ many digit
 
 int :: Biparser' Maybe Int
 int = do

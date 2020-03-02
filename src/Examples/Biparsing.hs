@@ -62,11 +62,11 @@ testBiparsing = do
   -- Ok, so that's well and good, but parsing single characters is no fun. We
   -- can use traversals to parse repeated instances of a pattern
 
-  -- For example, we can use the @each@ traversal to build a biparser for a
+  -- For example, we can use the @many@ traversal to build a biparser for a
   -- list of digits
   let
     digits :: Biparser' Maybe [DecDigit]
-    digits = each digit
+    digits = many digit
 
   -- Try it out forwards...
   print $ biparse digits $ "12..."                -- > Just ([DecDigit1, DecDigit2], "...")
@@ -91,7 +91,7 @@ testBiparsing = do
   print $ biparse digitOrChar $ "c2" -- > Just (Right 'c', "2")
 
   -- How about a mixed list of digits and chars?
-  print $ biparse (each digitOrChar) $ "a1b" -- > Just ([Right 'a',Left DecDigit1,Right 'b'],"")
+  print $ biparse (many digitOrChar) $ "a1b" -- > Just ([Right 'a',Left DecDigit1,Right 'b'],"")
 
   -- For the sake of example, let's run our @digits@ biparser through more
   -- coprisms until it turns into a biparser of natural numbers
@@ -106,11 +106,11 @@ testBiparsing = do
   -- We can mix and match
   let intOrChar = nat \/ char
   print $ biparse intOrChar $ "123a123"        -- > Just (Left 123,"a123")
-  print $ biparse (each intOrChar) $ "123a123" -- > Just ([Left 123,Right 'a',Left 123],"")
+  print $ biparse (many intOrChar) $ "123a123" -- > Just ([Left 123,Right 'a',Left 123],"")
 
   -- Things are getting complicated, so as a sanity check, let's try running the last example backwards
   -- and see if it produces the original string
-  print $ biprint (each intOrChar) $ [Left 123, Right 'a', Left 123] -- > Just ([Left 123,Right 'a',Left 123],"123a123")
+  print $ biprint (many intOrChar) $ [Left 123, Right 'a', Left 123] -- > Just ([Left 123,Right 'a',Left 123],"123a123")
 
   -- Ok great, so we know how to alternate between biparsers.
 
@@ -122,7 +122,7 @@ testBiparsing = do
   -- Here's an example where we use this technique to model a list
   let
     delimitedInts :: Biparser' Maybe [(Natural, Char)]
-    delimitedInts = each $ nat /\ char
+    delimitedInts = many $ nat /\ char
 
   print $ biparse delimitedInts $ "12,13,14."                  -- > Just ([(12,','),(13,','),(14,'.')],"")
   print $ biprint delimitedInts $ [(12,','),(13,','),(14,'.')] -- > Just ([(12,','),(13,','),(14,'.')],"12,13,14.")
@@ -141,7 +141,7 @@ testBiparsing = do
     space = re char2space char
 
     spacesThenChar :: Biparser' Maybe (String, Char)
-    spacesThenChar = each space /\ char
+    spacesThenChar = many space /\ char
 
   -- It works like this
   print $ biparse spacesThenChar $ "  f" -- > Just (("  ",'f'),"")
@@ -198,7 +198,7 @@ testBiparsing = do
 
   let
     manyints :: Biparser' Maybe [(Int, Char)]
-    manyints = each (int /\ re (exactly ',') char)
+    manyints = many (int /\ re (exactly ',') char)
 
   print $ biparse manyints $ "-10,11,0,--11,foo"
   print $ biprint manyints $ [(-10, ','), (11, ','), (0, ',')]

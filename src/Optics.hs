@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, DeriveGeneric #-}
+{-# LANGUAGE LambdaCase, DeriveGeneric, ViewPatterns #-}
 module Optics where
 
 import MyPrelude
@@ -12,6 +12,7 @@ import Data.Bifunctor (Bifunctor(..))
 import Data.Functor.Identity (Identity(..))
 
 import Data.List.NonEmpty (NonEmpty(..), toList)
+import qualified Data.List.NonEmpty as NE
 
 import Data.Generics.Wrapped (_Wrapped)
 
@@ -88,8 +89,8 @@ liftIsoFirst i = iso (first $ fwd i) (first $ bwd i)
 uncons :: Iso [a] [b] (Maybe (a, [a])) (Maybe (b, [b]))
 uncons = iso (\case { [] -> Nothing; (x : xs) -> Just (x, xs) }) (maybe [] (uncurry (:)))
 
-m2e :: Iso (Maybe a) (Maybe b) (Either () a) (Either () b)
-m2e = iso (maybe (Left ()) Right) (either (const Nothing) Just)
+maybeToEither :: Iso (Maybe a) (Maybe b) (Either () a) (Either () b)
+maybeToEither = iso (maybe (Left ()) Right) (either (const Nothing) Just)
 
 distinguish :: (a -> Bool) -> Iso a b (Either a a) (Either b b)
 distinguish p = iso (\a -> if p a then Left a else Right a) (either id id)
@@ -187,6 +188,12 @@ asEscapeCode = convert _Wrapped >>> prism
     ; _ -> Left c
     })
 
+unconsed :: Iso' (NonEmpty x) ((x, NonEmpty x) + x)
+unconsed = iso f b
+  where
+  f (NE.uncons -> (x, xs)) = case xs of { Nothing -> Right x; Just xs' -> Left (x, xs') }
+  b = either (uncurry NE.cons) pure
+
 -- Traversals
 newtype Bazaar a b s t = Bazaar { runBazaar :: forall f. Applicative f => (a -> f b) -> s -> f t }
 
@@ -228,8 +235,13 @@ instance Applicative (Bazaar a b s)
   where
   pure a = Bazaar $ \_ _ -> pure a
 
-each :: (Demux p, Visitor p, Lazy2 p) => Optic p [a] [b] a b
-each pab = uncons $ m2e $ symmE $ (\/ start) $ (pab /\) $ defer $ \_ -> each pab
+many :: (Demux p, Visitor p, Lazy2 p) => Optic p [a] [b] a b
+many pab = uncons $ maybeToEither $ symmE $ (\/ start) $ (pab /\) $ defer $ \_ -> many pab
+
+separated :: (Demux p, Mux p, Lazy2 p) => p () x -> Optic' p (NonEmpty a) a
+separated s v = rec
+  where
+  rec = unconsed $ (v /\ s \\ (defer $ \_ -> rec)) \/ v
 
 -- Reversals
 re :: Optic (Re p a b) s t a b -> Optic p b a t s

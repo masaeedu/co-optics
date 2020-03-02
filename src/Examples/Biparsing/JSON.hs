@@ -45,7 +45,7 @@ type Whitespace = [SpaceChar]
 
 -- Parse/print some whitespace in a JSON document
 jsonWhitespace :: Biparser' Maybe Whitespace
-jsonWhitespace = each jsonSpaceChar
+jsonWhitespace = many jsonSpaceChar
 
 data Value = N Number | S String | B Bool | Null | O Object | A Array
   deriving (Generic, Show)
@@ -101,7 +101,7 @@ jsonString :: Biparser' Maybe String
 jsonString =
   token_ "\""
   \\
-    (each $ specialVsNormal $ jsonSChar \/ jsonNChar)
+    (many $ specialVsNormal $ jsonSChar \/ jsonNChar)
   //
   token_ "\""
 
