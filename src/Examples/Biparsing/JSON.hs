@@ -28,28 +28,47 @@ data JSON = JSON { lpad :: Whitespace, val :: Value, rpad :: Whitespace }
 
 -- Parse a JSON document
 json :: Biparser' Maybe JSON
-json = gprod $ jsonWhitespace /\ jsonValue /\ jsonWhitespace /\ start
+json = gprod $
+  jsonWhitespace /\
+  jsonValue      /\
+  jsonWhitespace /\
+  start
 
 data Value = N Number | S String | B Bool | Null | O Object | A Array
   deriving (Generic, Show)
 
 -- Parse a JSON value (without leading/trailing whitespace)
 jsonValue :: Biparser' Maybe Value
-jsonValue = gsum $ jsonNumber \/ jsonString \/ jsonBool \/ jsonNull \/ jsonObject \/ jsonArray \/ stop
+jsonValue = gsum $
+  jsonNumber \/
+  jsonString \/
+  jsonBool   \/
+  jsonNull   \/
+  jsonObject \/
+  jsonArray  \/
+  stop
 
 data Number = Number { whole :: Int, fraction :: Maybe Natural, exponent :: Maybe Int }
   deriving (Generic, Show)
 
 -- Parse a JSON number
 jsonNumber :: Biparser' Maybe Number
-jsonNumber = gprod $ int /\ perhaps nat /\ perhaps int /\ start
+jsonNumber = gprod $
+  int         /\
+  perhaps nat /\
+  perhaps int /\
+  start
 
 data SpaceChar = Space | LF | CR | Tab
   deriving (Generic, Show)
 
 -- Parse a character representing a space in a JSON document
 jsonSpaceChar :: Biparser' Maybe SpaceChar
-jsonSpaceChar = gsum $ token_ " " \/ token_ "\n" \/ token_ "\r" \/ token_ "\t" \/ stop
+jsonSpaceChar = gsum $
+  token_ " "  \/
+  token_ "\n" \/
+  token_ "\r" \/
+  token_ "\t" \/ stop
 
 type Whitespace = [SpaceChar]
 
@@ -75,15 +94,26 @@ jsonEscapeCode = re (predicate isSpecial) $ asEscapeCode $ convert _Unwrapped $ 
 
 -- Parse an escaped special character in a JSON string
 jsonSChar :: Biparser' Maybe Escape
-jsonSChar = token_ "\\" -\ convert _Unwrapped jsonEscapeCode
+jsonSChar =
+  token_ "\\"
+  \\
+    convert _Unwrapped jsonEscapeCode
 
 -- Parse a JSON string
 jsonString :: Biparser' Maybe String
-jsonString = token_ "\"" -\ (each $ specialVsNormal $ jsonSChar \/ jsonNChar) /- token_ "\""
+jsonString =
+  token_ "\""
+  \\
+    (each $ specialVsNormal $ jsonSChar \/ jsonNChar)
+  //
+  token_ "\""
 
 -- Parse a JSON boolean
 jsonBool :: Biparser' Maybe Bool
-jsonBool = gsum $ token_ "true" \/ token_ "false" \/ stop
+jsonBool = gsum $
+  token_ "true"  \/
+  token_ "false" \/
+  stop
 
 -- Parse a JSON null
 jsonNull :: Biparser' Maybe ()
@@ -94,16 +124,33 @@ data KeyValuePair = KeyValuePair { lead :: Whitespace, key :: String, sep :: Whi
 
 -- Parse a JSON key value pair
 jsonKeyValuePair :: Biparser' Maybe KeyValuePair
-jsonKeyValuePair = gprod $ jsonWhitespace /\ jsonString /\ jsonWhitespace /\ token_ ":" -\ (defer $ \_ -> json) /\ start
+jsonKeyValuePair = gprod $
+  jsonWhitespace /\
+  jsonString     /\
+  jsonWhitespace /\
+  token_ ":"
+  \\
+    (defer $ \_ -> json) /\
+    start
 
 type Object = NonEmpty KeyValuePair + Whitespace
 
 -- Parse a JSON object
 jsonObject :: Biparser' Maybe Object
-jsonObject = token_ "{" -\ separated (token_ ",") jsonKeyValuePair \/ jsonWhitespace /- token_ "}"
+jsonObject =
+  token_ "{"
+  \\
+    token_ "," `separated` jsonKeyValuePair \/ jsonWhitespace
+  //
+  token_ "}"
 
 type Array = NonEmpty JSON + Whitespace
 
 -- Parse a JSON array
 jsonArray :: Biparser' Maybe Array
-jsonArray = token_ "[" -\ separated (token_ ",") (defer $ \_ -> json) \/ jsonWhitespace /- token_ "]"
+jsonArray =
+  token_ "["
+  \\
+    token_ "," `separated` (defer $ \_ -> json) \/ jsonWhitespace
+  //
+  token_ "]"

@@ -18,7 +18,7 @@ class Profunctor p => Demux p
   where
   (\/) ::  p a b -> p c d -> p (a + c) (b + d)
 
-infixr \/
+infixr 5 \/
 
 discard :: a -> ()
 discard = const ()

@@ -72,7 +72,7 @@ perhaps p = m2e . symmE $ p \/ trivial
 separated :: Biparser Maybe () x -> Biparser' Maybe y -> Biparser' Maybe (NonEmpty y)
 separated s v = rec
   where
-  rec = asNE $ ((v /- s) /\ (defer $ \_ -> rec)) \/ v
+  rec = asNE $ ((v // s) /\ (defer $ \_ -> rec)) \/ v
     where
     asNE :: Iso' (NonEmpty x) ((x, NonEmpty x) + x)
     asNE = iso f b

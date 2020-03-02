@@ -15,15 +15,15 @@ class Profunctor p => Mux p
 
 infixr 4 /\
 
-(/-) :: Mux p => p a b -> p () d -> p a b
-x /- y = dimap (, ()) fst $ x /\ y
+(//) :: Mux p => p a b -> p () d -> p a b
+x // y = dimap (, ()) fst $ x /\ y
 
-infixr 4 /-
+infixr 4 //
 
-(-\) :: Mux p => p () b -> p c d -> p c d
-x -\ y = dimap ((), ) snd $ x /\ y
+(\\) :: Mux p => p () b -> p c d -> p c d
+x \\ y = dimap ((), ) snd $ x /\ y
 
-infixr 4 -\
+infixr 4 \\
 
 class Mux p => Visitor p
   where
