@@ -60,5 +60,5 @@ instance (Coproduct (f p) xs, Coproduct (g p) ys, Append xs ys zs) => Coproduct 
 -- TODO: @lysxia suggested that this can be done better using a CPS approach here https://funprog.zulipchat.com/#narrow/stream/201385-Haskell/topic/Illegal.20type.20synonym.20family.20in.20instance/near/189455360
 -- try that out
 
-gcoprod :: forall a x xs. (Generic a, Coproduct (Rep a x) xs) => Iso' a (Sum xs)
-gcoprod = iso from to . asCoproduct @(Rep a x) @xs
+gsum :: forall a x xs. (Generic a, Coproduct (Rep a x) xs) => Iso' a (Sum xs)
+gsum = iso from to . asCoproduct @(Rep a x) @xs

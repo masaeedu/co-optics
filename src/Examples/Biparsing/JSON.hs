@@ -38,7 +38,7 @@ data Value = N Number | S String | B Bool | Null | O Object | A Array
   deriving (Generic, Show)
 
 jsonValue :: Biparser' Maybe Value
-jsonValue = gcoprod $ jsonNumber \/ jsonString \/ jsonBool \/ jsonNull \/ jsonObject \/ jsonArray \/ stop
+jsonValue = gsum $ jsonNumber \/ jsonString \/ jsonBool \/ jsonNull \/ jsonObject \/ jsonArray \/ stop
 
 data Number = Number { whole :: Int, fraction :: Maybe Natural, exponent :: Maybe Int }
   deriving (Generic, Show)
@@ -56,7 +56,7 @@ data SpaceChar = Space | LF | CR | Tab
 type Whitespace = [SpaceChar]
 
 jsonSC :: Biparser' Maybe SpaceChar
-jsonSC = gcoprod $ token_ " " \/ token_ "\n" \/ token_ "\r" \/ token_ "\t" \/ stop
+jsonSC = gsum $ token_ " " \/ token_ "\n" \/ token_ "\r" \/ token_ "\t" \/ stop
 
 jsonWhitespace :: Biparser' Maybe Whitespace
 jsonWhitespace = each jsonSC
@@ -100,7 +100,7 @@ jsonString :: Biparser' Maybe String
 jsonString = token_ "\"" -\ (each . unescape) (jsonSChar \/ jsonNChar) /- token_ "\""
 
 jsonBool :: Biparser' Maybe Bool
-jsonBool = gcoprod $ token_ "true" \/ token_ "false" \/ stop
+jsonBool = gsum $ token_ "true" \/ token_ "false" \/ stop
 
 jsonNull :: Biparser' Maybe ()
 jsonNull = token_ "null"
