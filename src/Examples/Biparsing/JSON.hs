@@ -21,6 +21,7 @@ import Monoidal.Applicative
 import Optics
 
 import SOP.Sums
+import SOP.Products
 
 import Examples.Biparsing.Common
 
@@ -28,11 +29,7 @@ data JSON = JSON { lpad :: Whitespace, val :: Value, rpad :: Whitespace }
   deriving (Generic, Show)
 
 json :: Biparser' Maybe JSON
-json = do
-  l <- jsonWhitespace & lmap lpad
-  v <- jsonValue & lmap val
-  r <- jsonWhitespace & lmap rpad
-  pure $ JSON l v r
+json = gprod $ jsonWhitespace /\ jsonValue /\ jsonWhitespace /\ start
 
 data Value = N Number | S String | B Bool | Null | O Object | A Array
   deriving (Generic, Show)
@@ -44,11 +41,7 @@ data Number = Number { whole :: Int, fraction :: Maybe Natural, exponent :: Mayb
   deriving (Generic, Show)
 
 jsonNumber :: Biparser' Maybe Number
-jsonNumber = do
-  w <- int & lmap whole
-  f <- perhaps nat & lmap fraction
-  e <- perhaps int & lmap exponent
-  pure $ Number w f e
+jsonNumber = gprod $ int /\ perhaps nat /\ perhaps int /\ start
 
 data SpaceChar = Space | LF | CR | Tab
   deriving (Generic, Show)
@@ -109,13 +102,7 @@ data Entry = Entry { lead :: Whitespace, key :: String, sep :: Whitespace, value
   deriving (Generic, Show)
 
 jsonEntry :: Biparser' Maybe Entry
-jsonEntry = do
-  w <- jsonWhitespace & lmap lead
-  k <- jsonString & lmap key
-  s <- jsonWhitespace & lmap sep
-  token_ ":"
-  v <- defer $ \_ -> json & lmap value
-  pure $ Entry w k s v
+jsonEntry = gprod $ jsonWhitespace /\ jsonString /\ jsonWhitespace /\ token_ ":" -\ (defer $ \_ -> json) /\ start
 
 type Object = NonEmpty Entry + Whitespace
 
