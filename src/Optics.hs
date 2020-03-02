@@ -188,7 +188,7 @@ asEscapeCode = convert _Wrapped >>> prism
     ; _ -> Left c
     })
 
-unconsed :: Iso' (NonEmpty x) ((x, NonEmpty x) + x)
+unconsed :: Iso (NonEmpty a) (NonEmpty b) ((a, NonEmpty a) + a) ((b, NonEmpty b) + b)
 unconsed = iso f b
   where
   f (NE.uncons -> (x, xs)) = case xs of { Nothing -> Right x; Just xs' -> Left (x, xs') }
@@ -238,7 +238,7 @@ instance Applicative (Bazaar a b s)
 many :: (Demux p, Visitor p, Lazy2 p) => Optic p [a] [b] a b
 many pab = uncons $ maybeToEither $ symmE $ (\/ start) $ (pab /\) $ defer $ \_ -> many pab
 
-separated :: (Demux p, Mux p, Lazy2 p) => p () x -> Optic' p (NonEmpty a) a
+separated :: (Demux p, Mux p, Lazy2 p) => p () x -> Optic p (NonEmpty a) (NonEmpty b) a b
 separated s v = rec
   where
   rec = unconsed $ (v /\ s \\ (defer $ \_ -> rec)) \/ v
