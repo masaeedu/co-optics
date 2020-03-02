@@ -211,6 +211,11 @@ testBiparsing = do
   print $ biparse jsonValue $ "[1, [{ \"foo\": 11 }, 5]]"
   traverse_ putStrLn $ biprint_ jsonValue =<< biparse_ jsonValue "[1, [{ \"foo\": [\"hello,\\nworld\", false] }, 5]]"
 
+  -- [0] - The idea of modeling a combined parser printer using a profunctor is owed to this excellent paper: https://arxiv.org/abs/1902.06950
+  --       While the paper uses various biparser specific combinators for building up and manipulating biparsers, the approach taken in this
+  --       repository is slightly different: we model biparsers using vanilla profunctors and their subclasses and we use polymorphic operations
+  --       defined in terms of these subclasses (otherwise known as optics) to manipulate and build up biparsers.
+
   -- [1] - These combinators actually don't have anything to do with biparsers specifically, biparsers are just one
   --       type of profunctor they can be instantiated at. See @Mux@ and @Demux@ in the repo for the general classes
 
