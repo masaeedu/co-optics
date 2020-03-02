@@ -10,7 +10,7 @@ import Data.Char (readLitChar)
 import Data.Profunctor
 import Data.List.NonEmpty (NonEmpty(..))
 
-import Data.Generics.Wrapped (_Wrapped)
+import Data.Generics.Wrapped (_Unwrapped)
 
 import Profunctor.Mux
 import Profunctor.Demux
@@ -88,9 +88,9 @@ unescape = iso fwd bwd
   bwd (Left (Escape c))   = fst $ head $ readLitChar ['\\', c]
   bwd (Right c)           = c
 
--- Special characters in a JSON string (which need escaping)
+-- Special characters in a JSON string (which are escaped with backslashes)
 jsonSChar :: Biparser' Maybe Escape
-jsonSChar = token_ "\\" -\ re (among "\"\\/bfnrt" . convert _Wrapped) char
+jsonSChar = token_ "\\" -\ (convert _Unwrapped . re (among "\"\\/bfnrt")) char
 
 -- Normal characters  in a JSON string (no escaping required)
 jsonNChar :: Biparser' Maybe Char
