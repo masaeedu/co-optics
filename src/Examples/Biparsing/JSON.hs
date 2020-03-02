@@ -21,6 +21,8 @@ import SOP.Products
 
 import Examples.Biparsing.Common
 
+-- Let's build a biparser for the JSON grammar described here: https://www.json.org/json-en.html
+
 data JSON = JSON { lpad :: Whitespace, val :: Value, rpad :: Whitespace }
   deriving (Generic, Show)
 
