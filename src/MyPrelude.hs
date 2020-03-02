@@ -1,5 +1,6 @@
 module MyPrelude
   ( module P
+  , module C
   , ifThenElse
   , module T
   , (&)
@@ -9,7 +10,11 @@ module MyPrelude
 import Prelude as P hiding
   ( Applicative(..)
   , zip
+  , id
+  , (.)
   )
+
+import Control.Category as C
 
 import Debug.Trace as T
 import Data.Function ((&))

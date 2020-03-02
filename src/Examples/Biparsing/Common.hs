@@ -1,14 +1,18 @@
-{-# LANGUAGE LambdaCase, ViewPatterns #-}
+{-# LANGUAGE LambdaCase, ViewPatterns, DeriveGeneric #-}
 module Examples.Biparsing.Common where
 
 import MyPrelude
 
+import GHC.Generics
 import GHC.Natural
 
+import Data.Char (readLitChar, showLitChar)
 import Data.Profunctor
 
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
+
+import Data.Generics.Wrapped (_Wrapped)
 
 import Data.Digit
 
@@ -75,13 +79,10 @@ separated s v = rec
   rec = asNE $ ((v /- s) /\ (defer $ \_ -> rec)) \/ v
     where
     asNE :: Iso' (NonEmpty x) ((x, NonEmpty x) + x)
-    asNE = iso fwd bwd
+    asNE = iso f b
       where
-      fwd (NE.uncons -> (x, xs)) = case xs of { Nothing -> Right x; Just xs' -> Left (x, xs') }
-      bwd = either (uncurry NE.cons) pure
-
-commaSeparated :: Biparser' Maybe x -> Biparser' Maybe (NonEmpty x)
-commaSeparated = separated (token_ ",")
+      f (NE.uncons -> (x, xs)) = case xs of { Nothing -> Right x; Just xs' -> Left (x, xs') }
+      b = either (uncurry NE.cons) pure
 
 sign :: Biparser' Maybe Bool
 sign = perhaps (re (exactly '-') char) & dimap sign2char char2sign
@@ -112,3 +113,15 @@ int = do
 
 hexDigit :: Biparser' Maybe HeXDigit
 hexDigit = re (convert charHeXaDeCiMaL) char
+
+data Escape = Escape Char
+  deriving (Generic, Show)
+
+-- Convert a character to its escape code
+asEscapeCode :: Prism' Char Escape
+asEscapeCode = convert _Wrapped >>> prism
+  (\c -> fst $ head $ readLitChar $ ['\\', c])
+  (\c -> case showLitChar c "" of
+    { ('\\' : c' : _) -> Right $ c'
+    ; _ -> Left c
+    })

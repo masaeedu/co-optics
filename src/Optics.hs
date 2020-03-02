@@ -6,7 +6,7 @@ import MyPrelude
 import GHC.Natural
 
 import Data.Profunctor (Profunctor(..), Strong(..), Costrong(..), Choice(..), Cochoice(..))
-import Data.Bifunctor (first, second)
+import Data.Bifunctor (Bifunctor(..))
 import Data.Functor.Identity (Identity(..))
 
 import Data.List.NonEmpty (NonEmpty(..), toList)
@@ -77,6 +77,9 @@ bwd f = _bwd (f exch_id)
 
 liftIso :: Functor f => Iso s t a b -> Iso (f s) (f t) (f a) (f b)
 liftIso i = iso (fmap $ fwd i) (fmap $ bwd i)
+
+liftIsoFirst :: Bifunctor f => Iso s t a b -> Iso (f s x) (f t x) (f a x) (f b x)
+liftIsoFirst i = iso (first $ fwd i) (first $ bwd i)
 
 uncons :: Iso [a] [b] (Maybe (a, [a])) (Maybe (b, [b]))
 uncons = iso (\case { [] -> Nothing; (x : xs) -> Just (x, xs) }) (maybe [] (uncurry (:)))
