@@ -31,8 +31,7 @@ json :: Biparser' Maybe JSON
 json = gprod $
   jsonWhitespace /\
   jsonValue      /\
-  jsonWhitespace /\
-  start
+  jsonWhitespace /\ start
 
 -- Parse a character representing a space in a JSON document
 jsonSpaceChar :: Biparser' Maybe SpaceChar
@@ -59,8 +58,7 @@ jsonValue = gsum $
   jsonBool   \/
   jsonNull   \/
   jsonObject \/
-  jsonArray  \/
-  stop
+  jsonArray  \/ stop
 
 data Number = Number { whole :: Int, fraction :: Maybe Natural, exponent :: Maybe Int }
   deriving (Generic, Show)
@@ -68,10 +66,9 @@ data Number = Number { whole :: Int, fraction :: Maybe Natural, exponent :: Mayb
 -- Parse a JSON number
 jsonNumber :: Biparser' Maybe Number
 jsonNumber = gprod $
-  int         /\
-  perhaps nat /\
-  perhaps int /\
-  start
+  int                         /\
+  perhaps (token_ "." \\ nat) /\
+  perhaps (token_ "E" \\ int) /\ start
 
 data SpaceChar = Space | LF | CR | Tab
   deriving (Generic, Show)
@@ -112,8 +109,7 @@ jsonString =
 jsonBool :: Biparser' Maybe Bool
 jsonBool = gsum $
   token_ "true"  \/
-  token_ "false" \/
-  stop
+  token_ "false" \/ stop
 
 -- Parse a JSON null
 jsonNull :: Biparser' Maybe ()
@@ -130,8 +126,7 @@ jsonKeyValuePair = gprod $
   jsonWhitespace /\
   token_ ":"
   \\
-    (defer $ \_ -> json) /\
-    start
+    (defer $ \_ -> json) /\ start
 
 type Object = NonEmpty KeyValuePair + Whitespace
 
