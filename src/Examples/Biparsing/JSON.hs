@@ -64,6 +64,14 @@ jsonWhitespace = each jsonSC
 data Escape = Escape { code :: Char }
   deriving (Generic, Show)
 
+-- Special characters in a JSON string (which are escaped with backslashes)
+jsonSChar :: Biparser' Maybe Escape
+jsonSChar = token_ "\\" -\ (convert _Unwrapped . re (among "\"\\/bfnrt")) char
+
+-- Normal characters  in a JSON string (no escaping required)
+jsonNChar :: Biparser' Maybe Char
+jsonNChar = re (predicate (\c -> c /= '\\' && c /= '"')) char
+
 unescape :: Iso' Char (Escape + Char)
 unescape = iso fwd bwd
   where
@@ -87,14 +95,6 @@ unescape = iso fwd bwd
   bwd (Left (Escape 't')) = '\t'
   bwd (Left (Escape c))   = fst $ head $ readLitChar ['\\', c]
   bwd (Right c)           = c
-
--- Special characters in a JSON string (which are escaped with backslashes)
-jsonSChar :: Biparser' Maybe Escape
-jsonSChar = token_ "\\" -\ (convert _Unwrapped . re (among "\"\\/bfnrt")) char
-
--- Normal characters  in a JSON string (no escaping required)
-jsonNChar :: Biparser' Maybe Char
-jsonNChar = re (predicate (\c -> c /= '\\' && c /= '"')) char
 
 jsonString :: Biparser' Maybe String
 jsonString = token_ "\"" -\ (each . unescape) (jsonSChar \/ jsonNChar) /- token_ "\""
