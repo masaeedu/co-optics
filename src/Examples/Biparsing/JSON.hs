@@ -20,6 +20,8 @@ import Monoidal.Applicative
 
 import Optics
 
+import SOP.Sums
+
 import Examples.Biparsing.Common
 
 data JSON = JSON { lpad :: Whitespace, val :: Value, rpad :: Whitespace }
@@ -35,23 +37,8 @@ json = do
 data Value = N Number | S String | B Bool | Null | O Object | A Array
   deriving (Generic, Show)
 
--- TODO: Generically derive stuff like this, or stop using sum types and start using variants
-v2e :: Iso' Value (Number + String + Bool + () + Object + Array)
-v2e = iso fwd bwd
-  where
-  fwd :: Value -> Number + String + Bool + () + Object + Array
-  fwd (N n) = Left $ Left $ Left $ Left $ Left $ n
-  fwd (S s) = Left $ Left $ Left $ Left $ Right $ s
-  fwd (B b) = Left $ Left $ Left $ Right $ b
-  fwd Null = Left $ Left $ Right $ ()
-  fwd (O o) = Left $ Right $ o
-  fwd (A a) = Right a
-
-  bwd :: Number + String + Bool + () + Object + Array -> Value
-  bwd = either (either (either (either (either N S) B) (const Null)) O) A
-
 jsonValue :: Biparser' Maybe Value
-jsonValue = v2e $ jsonNumber \/ jsonString \/ jsonBool \/ jsonNull \/ jsonObject \/ jsonArray
+jsonValue = gcoprod $ jsonNumber \/ jsonString \/ jsonBool \/ jsonNull \/ jsonObject \/ jsonArray \/ stop
 
 data Number = Number { whole :: Int, fraction :: Maybe Natural, exponent :: Maybe Int }
   deriving (Generic, Show)
@@ -66,21 +53,10 @@ jsonNumber = do
 data SpaceChar = Space | LF | CR | Tab
   deriving (Generic, Show)
 
-sc2e :: Iso' SpaceChar (() + () + () + ())
-sc2e = iso fwd bwd
-  where
-  fwd = \case {
-    Space -> Left (Left (Left ()));
-    LF    -> Left (Left (Right ()));
-    CR    -> Left (Right ());
-    Tab   -> Right ()
-  }
-  bwd = either (either (either (const Space) (const LF)) (const CR)) (const Tab)
-
 type Whitespace = [SpaceChar]
 
 jsonSC :: Biparser' Maybe SpaceChar
-jsonSC = sc2e $ token_ " " \/ token_ "\n" \/ token_ "\r" \/ token_ "\t"
+jsonSC = gcoprod $ token_ " " \/ token_ "\n" \/ token_ "\r" \/ token_ "\t" \/ stop
 
 jsonWhitespace :: Biparser' Maybe Whitespace
 jsonWhitespace = each jsonSC
@@ -123,17 +99,8 @@ jsonNChar = re (predicate (\c -> c /= '\\' && c /= '"')) char
 jsonString :: Biparser' Maybe String
 jsonString = token_ "\"" -\ (each . unescape) (jsonSChar \/ jsonNChar) /- token_ "\""
 
-b2e :: Iso' Bool (() + ())
-b2e = iso fwd bwd
-  where
-  fwd True = Left ()
-  fwd False = Right ()
-
-  bwd (Left _) = True
-  bwd (Right _) = False
-
 jsonBool :: Biparser' Maybe Bool
-jsonBool = b2e $ token_ "true" \/ token_ "false"
+jsonBool = gcoprod $ token_ "true" \/ token_ "false" \/ stop
 
 jsonNull :: Biparser' Maybe ()
 jsonNull = token_ "null"

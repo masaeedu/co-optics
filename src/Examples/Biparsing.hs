@@ -209,7 +209,7 @@ testBiparsing = do
   print $ biprint jsonString $ "\tfoo\bbar\""
 
   print $ biparse jsonValue $ "[1, [{ \"foo\": 11 }, 5]]"
-  traverse_ putStrLn $ biprint_ jsonValue =<< biparse_ jsonValue "[1, [{ \"foo\": 11 }, 5]]"
+  traverse_ putStrLn $ biprint_ jsonValue =<< biparse_ jsonValue "[1, [{ \"foo\": [\"hello,\\nworld\", false] }, 5]]"
 
   -- [1] - These combinators actually don't have anything to do with biparsers specifically, biparsers are just one
   --       type of profunctor they can be instantiated at. See @Mux@ and @Demux@ in the repo for the general classes

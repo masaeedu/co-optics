@@ -12,9 +12,13 @@ import Monoidal.Alternative
 
 type x + y = Either x y
 
+infixr +
+
 class Profunctor p => Demux p
   where
   (\/) ::  p a b -> p c d -> p (a + c) (b + d)
+
+infixr \/
 
 discard :: a -> ()
 discard = const ()
