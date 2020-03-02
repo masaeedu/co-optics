@@ -26,14 +26,14 @@ import Examples.Biparsing.Common
 data JSON = JSON { lpad :: Whitespace, val :: Value, rpad :: Whitespace }
   deriving (Generic, Show)
 
--- Parse a JSON document
+-- Parse/print a JSON document
 json :: Biparser' Maybe JSON
 json = gprod $
   jsonWhitespace /\
   jsonValue      /\
   jsonWhitespace /\ start
 
--- Parse a character representing a space in a JSON document
+-- Parse/print a character representing a space in a JSON document
 jsonSpaceChar :: Biparser' Maybe SpaceChar
 jsonSpaceChar = gsum $
   token_ " "  \/
@@ -43,14 +43,14 @@ jsonSpaceChar = gsum $
 
 type Whitespace = [SpaceChar]
 
--- Parse some whitespace in a JSON document
+-- Parse/print some whitespace in a JSON document
 jsonWhitespace :: Biparser' Maybe Whitespace
 jsonWhitespace = each jsonSpaceChar
 
 data Value = N Number | S String | B Bool | Null | O Object | A Array
   deriving (Generic, Show)
 
--- Parse a JSON value (without leading/trailing whitespace)
+-- Parse/print a JSON value (without leading/trailing whitespace)
 jsonValue :: Biparser' Maybe Value
 jsonValue = gsum $
   jsonNumber \/
@@ -63,7 +63,7 @@ jsonValue = gsum $
 data Number = Number { whole :: Int, fraction :: Maybe Natural, exponent :: Maybe Int }
   deriving (Generic, Show)
 
--- Parse a JSON number
+-- Parse/print a JSON number
 jsonNumber :: Biparser' Maybe Number
 jsonNumber = gprod $
   int                         /\
@@ -73,7 +73,7 @@ jsonNumber = gprod $
 data SpaceChar = Space | LF | CR | Tab
   deriving (Generic, Show)
 
--- Parse a normal character in a JSON string (anything but quotes or backslashes)
+-- Parse/print a normal character in a JSON string (anything but quotes or backslashes)
 jsonNChar :: Biparser' Maybe Char
 jsonNChar = re (predicate (\c -> c /= '\\' && c /= '"')) char
 
@@ -85,18 +85,18 @@ isSpecial c = c `elem` "\"\\/\b\f\n\r\t"
 specialVsNormal :: Iso' Char (Escape + Char)
 specialVsNormal = distinguish isSpecial . liftIsoFirst (convert _Wrapped)
 
--- Parse the escape code of a special character
+-- Parse/print the escape code of a special character
 jsonEscapeCode :: Biparser' Maybe Char
 jsonEscapeCode = re (predicate isSpecial) $ asEscapeCode $ convert _Unwrapped $ char
 
--- Parse an escaped special character in a JSON string
+-- Parse/print an escaped special character in a JSON string
 jsonSChar :: Biparser' Maybe Escape
 jsonSChar =
   token_ "\\"
   \\
     convert _Unwrapped jsonEscapeCode
 
--- Parse a JSON string
+-- Parse/print a JSON string
 jsonString :: Biparser' Maybe String
 jsonString =
   token_ "\""
@@ -105,20 +105,20 @@ jsonString =
   //
   token_ "\""
 
--- Parse a JSON boolean
+-- Parse/print a JSON boolean
 jsonBool :: Biparser' Maybe Bool
 jsonBool = gsum $
   token_ "true"  \/
   token_ "false" \/ stop
 
--- Parse a JSON null
+-- Parse/print a JSON null
 jsonNull :: Biparser' Maybe ()
 jsonNull = token_ "null"
 
 data KeyValuePair = KeyValuePair { lead :: Whitespace, key :: String, sep :: Whitespace, value :: JSON }
   deriving (Generic, Show)
 
--- Parse a JSON key value pair
+-- Parse/print a JSON key value pair
 jsonKeyValuePair :: Biparser' Maybe KeyValuePair
 jsonKeyValuePair = gprod $
   jsonWhitespace /\
@@ -130,7 +130,7 @@ jsonKeyValuePair = gprod $
 
 type Object = NonEmpty KeyValuePair + Whitespace
 
--- Parse a JSON object
+-- Parse/print a JSON object
 jsonObject :: Biparser' Maybe Object
 jsonObject =
   token_ "{"
@@ -141,7 +141,7 @@ jsonObject =
 
 type Array = NonEmpty JSON + Whitespace
 
--- Parse a JSON array
+-- Parse/print a JSON array
 jsonArray :: Biparser' Maybe Array
 jsonArray =
   token_ "["
