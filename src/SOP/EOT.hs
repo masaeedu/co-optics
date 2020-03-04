@@ -56,20 +56,20 @@ instance
 
 data Cases = Recurse | Remove | Done
 
-type family TEnd p :: Cases
+type family TCase p :: Cases
   where
-  TEnd (x × ()) = 'Remove
-  TEnd (x × y ) = 'Recurse
-  TEnd _        = 'Done
+  TCase (x × ()) = 'Remove
+  TCase (x × y ) = 'Recurse
+  TCase _        = 'Done
 
 class
-  TEnd p ~ c
+  TCase p ~ c
   => TNormalize (c :: Cases) (p :: *) (n :: *) | c p -> n
   where
   tnormalize :: Iso' p n
 
 instance
-  TEnd x ~ 'Done
+  TCase x ~ 'Done
   => TNormalize 'Done x x
   where
   tnormalize = iso id id
@@ -80,27 +80,27 @@ instance
   tnormalize = iso fst (, ())
 
 instance
-  ( TEnd (x × y) ~ 'Recurse
+  ( TCase (x × y) ~ 'Recurse
   , TNormalize b y y'
   )
   => TNormalize 'Recurse (x × y) (x × y')
   where
   tnormalize = iso (second $ fwd $ tnormalize) (second $ bwd $ tnormalize)
 
-type family EEnd e :: Cases
+type family ECase e :: Cases
   where
-  EEnd (x + Void) = 'Remove
-  EEnd (x + y   ) = 'Recurse
-  EEnd _          = 'Done
+  ECase (x + Void) = 'Remove
+  ECase (x + y   ) = 'Recurse
+  ECase _          = 'Done
 
 class
-  EEnd e ~ c
+  ECase e ~ c
   => ENormalize (c :: Cases) (e :: *) (n :: *) | c e -> n
   where
   enormalize :: Iso' e n
 
 instance
-  ( EEnd x ~ 'Done
+  ( ECase x ~ 'Done
   , TNormalize b x x'
   )
   => ENormalize 'Done x x'
@@ -114,7 +114,7 @@ instance
   enormalize = iso (either (fwd tnormalize) absurd) (Left . bwd tnormalize)
 
 instance
-  ( EEnd (x + y) ~ 'Recurse
+  ( ECase (x + y) ~ 'Recurse
   , TNormalize a x x'
   , ENormalize b y y'
   )
@@ -131,8 +131,8 @@ gsop ::
   , Code y ~ yys
   , SumOfProducts xxs pe1
   , SumOfProducts yys pe2
-  , EEnd pe1 ~ b1
-  , EEnd pe2 ~ b2
+  , ECase pe1 ~ b1
+  , ECase pe2 ~ b2
   , ENormalize b1 pe1 pe1'
   , ENormalize b2 pe2 pe2'
   )
