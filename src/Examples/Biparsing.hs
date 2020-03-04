@@ -97,7 +97,7 @@ testBiparsing = do
   -- coprisms until it turns into a biparser of natural numbers
   let
     nat :: Biparser' Maybe Natural
-    nat = re (asNonEmpty . digits2int) $ digits
+    nat = re digitsAsNatural $ re _Just $ re asNonEmpty $ digits
 
   -- Let's see if it works
   print $ biparse nat $ "123131234" -- > Just (123131234,"")

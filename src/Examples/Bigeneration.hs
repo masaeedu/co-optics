@@ -15,7 +15,10 @@ import Profunctor.Mux
 import Profunctor.Demux
 import Profunctor.Muxable
 
+import Monoidal.Applicative
+
 import Optics
+
 type Generator      = Joker Gen
 type Check          = Kleisli Maybe
 type Bigenerator    = Product Generator Check
@@ -33,8 +36,11 @@ bicheck = runKleisli . psnd
 sample :: Show x => Gen x -> IO ()
 sample = print <=< Gen.sample
 
-int :: Bigenerator Int Int
+int :: Bigenerator' Int
 int = bigenerator (Gen.int (Range.constant 0 10)) Just
+
+char :: Bigenerator' (Maybe Char)
+char = bigenerator (Gen.maybe Gen.alpha) Just
 
 testBigeneration :: IO ()
 testBigeneration = do
@@ -55,3 +61,5 @@ testBigeneration = do
 
   sample $ bigenerate $ ranges
   sample $ bigenerate $ bundle $ replicate 2 ranges
+
+  sample $ bigenerate $ pure ',' `separated` re _Just char

@@ -8,6 +8,7 @@ import GHC.Natural
 
 import Data.List.NonEmpty (NonEmpty(..))
 
+import qualified Generics.SOP as SOP
 import Data.Generics.Wrapped (_Wrapped, _Unwrapped)
 
 import Profunctor.Mux
@@ -16,8 +17,7 @@ import Profunctor.Lazy
 
 import Optics
 
-import SOP.Sums
-import SOP.Products
+import SOP.EOT
 
 import Examples.Biparsing.Common
 
@@ -25,21 +25,26 @@ import Examples.Biparsing.Common
 
 data JSON = JSON { lpad :: Whitespace, val :: Value, rpad :: Whitespace }
   deriving (Generic, Show)
+instance SOP.Generic JSON
 
 -- Parse/print a JSON document
 json :: Biparser' Maybe JSON
-json = gprod $
+json = gsop $
   jsonWhitespace /\
   jsonValue      /\
-  jsonWhitespace /\ start
+  jsonWhitespace
+
+data SpaceChar = Space | LF | CR | Tab
+  deriving (Generic, Show)
+instance SOP.Generic SpaceChar
 
 -- Parse/print a character representing a space in a JSON document
 jsonSpaceChar :: Biparser' Maybe SpaceChar
-jsonSpaceChar = gsum $
+jsonSpaceChar = gsop $
   token_ " "  \/
   token_ "\n" \/
   token_ "\r" \/
-  token_ "\t" \/ stop
+  token_ "\t"
 
 type Whitespace = [SpaceChar]
 
@@ -49,29 +54,28 @@ jsonWhitespace = many jsonSpaceChar
 
 data Value = N Number | S String | B Bool | Null | O Object | A Array
   deriving (Generic, Show)
+instance SOP.Generic Value
 
 -- Parse/print a JSON value (without leading/trailing whitespace)
 jsonValue :: Biparser' Maybe Value
-jsonValue = gsum $
+jsonValue = gsop $
   jsonNumber \/
   jsonString \/
   jsonBool   \/
   jsonNull   \/
   jsonObject \/
-  jsonArray  \/ stop
+  jsonArray
 
 data Number = Number { whole :: Int, fraction :: Maybe Natural, exponent :: Maybe Int }
   deriving (Generic, Show)
+instance SOP.Generic Number
 
 -- Parse/print a JSON number
 jsonNumber :: Biparser' Maybe Number
-jsonNumber = gprod $
+jsonNumber = gsop $
   int                         /\
   perhaps (token_ "." \\ nat) /\
-  perhaps (token_ "E" \\ int) /\ start
-
-data SpaceChar = Space | LF | CR | Tab
-  deriving (Generic, Show)
+  perhaps (token_ "E" \\ int)
 
 -- Parse/print a normal character in a JSON string (anything but quotes or backslashes)
 jsonNChar :: Biparser' Maybe Char
@@ -107,9 +111,9 @@ jsonString =
 
 -- Parse/print a JSON boolean
 jsonBool :: Biparser' Maybe Bool
-jsonBool = gsum $
+jsonBool = gsop $
   token_ "true"  \/
-  token_ "false" \/ stop
+  token_ "false"
 
 -- Parse/print a JSON null
 jsonNull :: Biparser' Maybe ()
@@ -117,16 +121,17 @@ jsonNull = token_ "null"
 
 data KeyValuePair = KeyValuePair { lead :: Whitespace, key :: String, sep :: Whitespace, value :: JSON }
   deriving (Generic, Show)
+instance SOP.Generic KeyValuePair
 
 -- Parse/print a JSON key value pair
 jsonKeyValuePair :: Biparser' Maybe KeyValuePair
-jsonKeyValuePair = gprod $
+jsonKeyValuePair = gsop $
   jsonWhitespace /\
   jsonString     /\
   jsonWhitespace /\
   token_ ":"
   \\
-    (defer $ \_ -> json) /\ start
+    (defer $ \_ -> json)
 
 type Object = NonEmpty KeyValuePair + Whitespace
 

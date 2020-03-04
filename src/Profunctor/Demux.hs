@@ -10,9 +10,7 @@ import Profunctor.Joker
 import Profunctor.Kleisli
 import Monoidal.Alternative
 
-type x + y = Either x y
-
-infixr +
+import SOP.EOT (type (+))
 
 class Profunctor p => Demux p
   where

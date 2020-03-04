@@ -1,5 +1,5 @@
 {-# LANGUAGE LambdaCase, DeriveGeneric, ViewPatterns #-}
-module Optics where
+module Optics (module Optics, module Optics.Types, module Optics.Iso) where
 
 import MyPrelude
 
@@ -7,11 +7,11 @@ import GHC.Generics
 import GHC.Natural
 
 import Data.Char (readLitChar, showLitChar)
-import Data.Profunctor (Profunctor(..), Strong(..), Costrong(..), Choice(..), Cochoice(..))
+import Data.Profunctor (Profunctor(..), Strong(..), Choice(..))
 import Data.Bifunctor (Bifunctor(..))
 import Data.Functor.Identity (Identity(..))
 
-import Data.List.NonEmpty (NonEmpty(..), toList)
+import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 
 import Data.Generics.Wrapped (_Wrapped)
@@ -29,22 +29,10 @@ import Profunctor.Mux
 import Profunctor.Demux
 import Profunctor.Lazy
 
-type Optic p  s t a b = p a b -> p s t
+import Optics.Types
+import Optics.Iso
 
-type Iso       s t a b = forall p. Profunctor p => Optic p s t a b
-type Lens      s t a b = forall p. Strong     p => Optic p s t a b
-type Colens    s t a b = forall p. Costrong   p => Optic p s t a b
-type Prism     s t a b = forall p. Choice     p => Optic p s t a b
-type Coprism   s t a b = forall p. Cochoice   p => Optic p s t a b
-type Traversal s t a b = forall p. Mux        p => Optic p s t a b
-
-type Optic'   p s a = Optic   p s s a a
-type Iso'       s a = Iso       s s a a
-type Lens'      s a = Lens      s s a a
-type Colens'    s a = Colens    s s a a
-type Prism'     s a = Prism     s s a a
-type Coprism'   s a = Coprism   s s a a
-type Traversal' s a = Traversal s s a a
+import SOP.EOT (type (+))
 
 -- Tensorial structure
 assocE :: Iso' (Either a (Either b c)) (Either (Either a b) c)
@@ -56,44 +44,6 @@ symmE :: Iso (Either a b) (Either c d) (Either b a) (Either d c)
 symmE = dimap
   (either Right Left)
   (either Right Left)
--- Concrete optics and conversions
-
--- Isomorphisms
-data Exchange a b s t = Exchange { _fwd :: s -> a, _bwd :: b -> t }
-
-exch_id :: Exchange a b a b
-exch_id = Exchange id id
-
-exch_compose :: Exchange c d e f -> Exchange a b c d -> Exchange a b e f
-exch_compose (Exchange f1 b1) (Exchange f2 b2) = Exchange  (f2 . f1) (b1 . b2)
-
-instance Profunctor (Exchange a b)
-  where
-  dimap f g (Exchange fwd bwd) = Exchange (fwd . f) (g . bwd)
-
-iso :: (s -> a) -> (b -> t) -> Iso s t a b
-iso = dimap
-
-fwd :: Iso s t a b -> s -> a
-fwd f = _fwd (f exch_id)
-
-bwd :: Iso s t a b -> b -> t
-bwd f = _bwd (f exch_id)
-
-liftIso :: Functor f => Iso s t a b -> Iso (f s) (f t) (f a) (f b)
-liftIso i = iso (fmap $ fwd i) (fmap $ bwd i)
-
-liftIsoFirst :: Bifunctor f => Iso s t a b -> Iso (f s x) (f t x) (f a x) (f b x)
-liftIsoFirst i = iso (first $ fwd i) (first $ bwd i)
-
-uncons :: Iso [a] [b] (Maybe (a, [a])) (Maybe (b, [b]))
-uncons = iso (\case { [] -> Nothing; (x : xs) -> Just (x, xs) }) (maybe [] (uncurry (:)))
-
-maybeToEither :: Iso (Maybe a) (Maybe b) (Either () a) (Either () b)
-maybeToEither = iso (maybe (Left ()) Right) (either (const Nothing) Just)
-
-distinguish :: (a -> Bool) -> Iso a b (Either a a) (Either b b)
-distinguish p = iso (\a -> if p a then Left a else Right a) (either id id)
 
 -- Lenses
 data Shop a b s t = Shop { _view :: s -> a, _update :: s -> b -> t }
@@ -164,11 +114,11 @@ _Just = prism Just (maybe (Left Nothing) Right)
 c2d :: Prism' Char DecDigit
 c2d = convert charDecimal
 
-digits2int :: Prism' (NonEmpty DecDigit) Natural
-digits2int = convert _NaturalDigits
+digitsAsNatural :: Prism' (NonEmpty DecDigit) Natural
+digitsAsNatural = convert _NaturalDigits
 
-asNonEmpty :: Prism [a] [b] (NonEmpty a) (NonEmpty b)
-asNonEmpty = prism toList (\case { [] -> Left []; (x : xs) -> Right $ x :| xs })
+asNonEmpty :: Iso [a] [b] (Maybe (NonEmpty a)) (Maybe (NonEmpty b))
+asNonEmpty = iso (\case { [] -> Nothing; (x : xs) -> Just $ x :| xs }) (maybe [] NE.toList)
 
 bounded ::  Int -> Int -> Prism' Int Int
 bounded l h = predicate (\i -> i <= h && i >= l)
@@ -235,8 +185,13 @@ instance Applicative (Bazaar a b s)
   where
   pure a = Bazaar $ \_ _ -> pure a
 
+some :: (Mux p, Demux p, Lazy2 p) => Optic p (NonEmpty a) (NonEmpty b) a b
+some pab = rec
+  where
+  rec = unconsed $ (pab /\ (defer $ \_ -> rec)) \/ pab
+
 many :: (Demux p, Visitor p, Lazy2 p) => Optic p [a] [b] a b
-many pab = uncons $ maybeToEither $ symmE $ (\/ start) $ (pab /\) $ defer $ \_ -> many pab
+many pab = asNonEmpty $ maybeToEither $ symmE $ some pab \/ start
 
 separated :: (Demux p, Mux p, Lazy2 p) => p () x -> Optic p (NonEmpty a) (NonEmpty b) a b
 separated s v = rec

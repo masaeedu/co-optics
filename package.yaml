@@ -19,6 +19,7 @@ dependencies:
   - hedgehog
   - lens
   - generic-lens
+  - generics-sop
 
 ghc-options: [-Wall]
 default-extensions:
