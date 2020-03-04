@@ -32,7 +32,7 @@ import Profunctor.Lazy
 import Optics.Types
 import Optics.Iso
 
-import SOP.EOT (type (+))
+import SOP.EOT
 
 -- Tensorial structure
 assocE :: Iso' (Either a (Either b c)) (Either (Either a b) c)
@@ -117,8 +117,8 @@ c2d = convert charDecimal
 digitsAsNatural :: Prism' (NonEmpty DecDigit) Natural
 digitsAsNatural = convert _NaturalDigits
 
-asNonEmpty :: Iso [a] [b] (Maybe (NonEmpty a)) (Maybe (NonEmpty b))
-asNonEmpty = iso (\case { [] -> Nothing; (x : xs) -> Just $ x :| xs }) (maybe [] NE.toList)
+asNonEmpty :: Iso' [a] (Maybe (NonEmpty a))
+asNonEmpty = gsop . re maybeToEither . liftIso (re gsop)
 
 bounded ::  Int -> Int -> Prism' Int Int
 bounded l h = predicate (\i -> i <= h && i >= l)
