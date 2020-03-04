@@ -3,8 +3,6 @@ module SOP.EOT where
 
 import MyPrelude
 
-import qualified GHC.Generics as GHC
-
 import Data.Void
 import Data.Bifunctor
 
