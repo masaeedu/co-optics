@@ -16,31 +16,39 @@ infixr +
 type x × y = (x, y)
 infixr ×
 
-class Product (xs :: [*]) (p :: *) | xs -> p
+class
+  Product (xs :: [*]) (p :: *) | xs -> p
   where
   asProduct :: Iso' (NP I xs) p
 
-instance Product '[] ()
+instance
+  Product '[] ()
   where
   asProduct = iso (const ()) (const Nil)
 
 instance
-  Product xs p =>
-  Product (x ': xs) (x × p)
+  Product xs p
+  => Product (x ': xs) (x × p)
   where
   asProduct = iso
     (\case { (fx :* xs) -> (unI fx, fwd asProduct xs) })
     (\(fx, p) -> I fx :* bwd asProduct p)
 
-class SumOfProducts (xxs :: [[*]]) (pe :: *) | xxs -> pe
+class
+  SumOfProducts (xxs :: [[*]]) (pe :: *) | xxs -> pe
   where
   asSumOfProducts :: Iso' (SOP I xxs) pe
 
-instance SumOfProducts '[] Void
+instance
+  SumOfProducts '[] Void
   where
   asSumOfProducts = iso (\case {} . unSOP) absurd
 
-instance (Product x p, SumOfProducts xs pe) => SumOfProducts (x ': xs) (p + pe)
+instance
+  ( Product x p
+  , SumOfProducts xs pe
+  )
+  => SumOfProducts (x ': xs) (p + pe)
   where
   asSumOfProducts = iso
     (unSOP >>> \case { Z fx -> Left $ fwd asProduct fx; S xs -> Right $ fwd asSumOfProducts $ SOP $ xs })
