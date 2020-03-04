@@ -117,7 +117,7 @@ c2d = convert charDecimal
 digitsAsNatural :: Prism' (NonEmpty DecDigit) Natural
 digitsAsNatural = convert _NaturalDigits
 
-asNonEmpty :: Iso' [a] (Maybe (NonEmpty a))
+asNonEmpty :: Iso [a] [b] (Maybe (NonEmpty a)) (Maybe (NonEmpty b))
 asNonEmpty = gsop . re maybeToEither . liftIso (re gsop)
 
 bounded ::  Int -> Int -> Prism' Int Int

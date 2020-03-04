@@ -126,12 +126,17 @@ instance
 
 gsop ::
   ( Generic x
+  , Generic y
   , Code x ~ xxs
-  , SumOfProducts xxs pe
-  , EEnd pe ~ b
-  , ENormalize b pe pe'
+  , Code y ~ yys
+  , SumOfProducts xxs pe1
+  , SumOfProducts yys pe2
+  , EEnd pe1 ~ b1
+  , EEnd pe2 ~ b2
+  , ENormalize b1 pe1 pe1'
+  , ENormalize b2 pe2 pe2'
   )
-  => Iso' x pe'
+  => Iso x y pe1' pe2'
 gsop = iso
   (\x -> fwd enormalize $ fwd asSumOfProducts $ from $ x)
   (\n -> to $ bwd asSumOfProducts $ bwd enormalize $ n)
