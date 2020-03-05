@@ -6,7 +6,7 @@ import Data.Void
 
 class Functor f => Decide f
   where
-  decide :: f (Either a b) -> Either (f a) (f b)
+  decide :: f (a + b) -> f a + f b
 
 class Decide f => Decisive f
   where

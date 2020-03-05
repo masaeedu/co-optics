@@ -8,13 +8,8 @@ import Data.Bifunctor
 
 import Generics.SOP
 
-import Optics.Iso
-
-type x + y = Either x y
-infixr +
-
-type x × y = (x, y)
-infixr ×
+import Optics.Types
+import Optics.Iso.Combinators
 
 class
   Product (xs :: [*]) (p :: *) | xs -> p

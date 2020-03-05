@@ -1,46 +1,66 @@
 {-# LANGUAGE LambdaCase #-}
-module Optics.Iso (module Optics.Iso, module Optics.Types) where
+module Optics.Iso (module Optics.Iso, module Optics.Iso.Combinators) where
 
 import MyPrelude
 
+import Data.Void
 import Data.Bifunctor
-import Data.Profunctor
+import Data.List.NonEmpty (NonEmpty(..))
 
 import Optics.Types
+import Optics.Reverse
+import Optics.Iso.Combinators
 
--- Exchange
-data Exchange a b s t = Exchange { _fwd :: s -> a, _bwd :: b -> t }
+import SOP.EOT
 
-exch_id :: Exchange a b a b
-exch_id = Exchange id id
+assocE :: Iso (a + (b + c)) (d + (e + f)) ((a + b) + c) ((d + e) + f)
+assocE = iso
+  (either (Left . Left) (either (Left . Right) Right))
+  (either (either Left (Right . Left)) (Right . Right))
 
-exch_compose :: Exchange c d e f -> Exchange a b c d -> Exchange a b e f
-exch_compose (Exchange f1 b1) (Exchange f2 b2) = Exchange  (f2 . f1) (b1 . b2)
+symmE :: Iso (a + b) (c + d) (b + a) (d + c)
+symmE = iso
+  (either Right Left)
+  (either Right Left)
 
-instance Profunctor (Exchange a b)
-  where
-  dimap f g (Exchange fwd bwd) = Exchange (fwd . f) (g . bwd)
+runitE :: Iso (a + Void) (b + Void) a b
+runitE = iso (either id absurd) Left
 
-iso :: (s -> a) -> (b -> t) -> Iso s t a b
-iso = dimap
+lunitE :: Iso (Void + a) (Void + b) a b
+lunitE = symmE . runitE
 
-fwd :: Iso s t a b -> s -> a
-fwd f = _fwd (f exch_id)
+assocT :: Iso (a × (b × c)) (d × (e × f)) ((a × b) × c) ((d × e) × f)
+assocT = iso
+  (\(a, (b, c)) -> ((a, b), c))
+  (\((a, b), c) -> (a, (b, c)))
 
-bwd :: Iso s t a b -> b -> t
-bwd f = _bwd (f exch_id)
+symmT :: Iso (a × b) (c × d) (b × a) (d × c)
+symmT = iso
+  (\(a, b) -> (b, a))
+  (\(a, b) -> (b, a))
 
-liftIso :: Functor f => Iso s t a b -> Iso (f s) (f t) (f a) (f b)
-liftIso i = iso (fmap $ fwd i) (fmap $ bwd i)
+runitT :: Iso (a × ()) (b × ()) a b
+runitT = iso fst (, ())
 
-liftIsoFirst :: Bifunctor f => Iso s t a b -> Iso (f s x) (f t x) (f a x) (f b x)
-liftIsoFirst i = iso (first $ fwd i) (first $ bwd i)
+lunitT :: Iso (() × a) (() × b) a b
+lunitT = symmT . runitT
+
+ldistribT :: Iso (a × (b + c)) (d × (e + f)) (a × b + a × c) (d × e + d × f)
+ldistribT = iso
+  (\(a, bc) -> bimap (a, ) (a, ) bc)
+  (either (second Left) (second Right))
+
+rdistribT :: Iso ((b + c) × a) ((e + f) × d) (b × a + c × a) (e × d + f × d)
+rdistribT = symmT . ldistribT . bimapIso symmT symmT
 
 uncons :: Iso [a] [b] (Maybe (a, [a])) (Maybe (b, [b]))
 uncons = iso (\case { [] -> Nothing; (x : xs) -> Just (x, xs) }) (maybe [] (uncurry (:)))
 
-maybeToEither :: Iso (Maybe a) (Maybe b) (Either () a) (Either () b)
+maybeToEither :: Iso (Maybe a) (Maybe b) (() + a) (() + b)
 maybeToEither = iso (maybe (Left ()) Right) (either (const Nothing) Just)
 
-distinguish :: (a -> Bool) -> Iso a b (Either a a) (Either b b)
-distinguish p = iso (\a -> if p a then Left a else Right a) (either id id)
+listToNonEmpty :: Iso [a] [b] (Maybe (NonEmpty a)) (Maybe (NonEmpty b))
+listToNonEmpty = gsop . re maybeToEither . mapIso (re gsop)
+
+unconsNonEmpty :: Iso (NonEmpty a) (NonEmpty b) ((a × NonEmpty a) + a) ((b × NonEmpty b) + b)
+unconsNonEmpty = mapIso runitT >>> ldistribT >>> mapIso (symmE >>> maybeToEither >>> listToNonEmpty) >>> gsop

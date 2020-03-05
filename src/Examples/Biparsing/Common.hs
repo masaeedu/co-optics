@@ -78,7 +78,7 @@ digit :: Biparser' Maybe DecDigit
 digit = re (convert charDecimal) $ char
 
 nat :: Biparser' Maybe Natural
-nat = re digitsAsNatural $ re _Just $ re asNonEmpty $ many digit
+nat = re digitsAsNatural $ re _Just $ re listToNonEmpty $ many digit
 
 int :: Biparser' Maybe Int
 int = do

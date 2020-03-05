@@ -87,7 +87,7 @@ isSpecial c = c `elem` "\"\\/\b\f\n\r\t"
 
 -- Distinguish characters by whether they're special or not
 specialVsNormal :: Iso' Char (Escape + Char)
-specialVsNormal = distinguish isSpecial . liftIsoFirst (convert _Wrapped)
+specialVsNormal = distinguish isSpecial . firstIso (convert _Wrapped)
 
 -- Parse/print the escape code of a special character
 jsonEscapeCode :: Biparser' Maybe Char

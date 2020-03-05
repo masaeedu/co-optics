@@ -82,7 +82,7 @@ testBiparsing = do
   -- E.g. we might want to first try parsing a digit, then fall back to parsing an
   -- arbitrary character
   let
-    digitOrChar :: Biparser' Maybe (Either DecDigit Char)
+    digitOrChar :: Biparser' Maybe (DecDigit + Char)
     digitOrChar = digit \/ char
 
   -- Try it out on some inputs
@@ -97,7 +97,7 @@ testBiparsing = do
   -- coprisms until it turns into a biparser of natural numbers
   let
     nat :: Biparser' Maybe Natural
-    nat = re digitsAsNatural $ re _Just $ re asNonEmpty $ digits
+    nat = re digitsAsNatural $ re _Just $ re listToNonEmpty $ digits
 
   -- Let's see if it works
   print $ biparse nat $ "123131234" -- > Just (123131234,"")

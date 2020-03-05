@@ -18,7 +18,7 @@ import Monoidal.Decisive
 
 class Functor f => Filterable f
   where
-  partition :: f (Either a b) -> (f a, f b)
+  partition :: f (a + b) -> f a × f b
 
 newtype Dynamic f a = Dynamic { runDynamic :: f a }
   deriving (Functor, Apply, Applicative, Alt, Alternative, Monad)
@@ -46,10 +46,10 @@ instance Ord k => Filterable (M.Map k)
 trivial :: Functor f => f (a, b) -> (f a, f b)
 trivial fab = (fmap fst fab, fmap snd fab)
 
-partitionInner :: (Functor f, Filterable g) => f (g (Either a b)) -> (f (g a), f (g b))
+partitionInner :: (Functor f, Filterable g) => f (g (a + b)) -> f (g a) × f (g b)
 partitionInner = trivial . fmap partition
 
-partitionOuter :: (Filterable f, Decide g) => f (g (Either a b)) -> (f (g a), f (g b))
+partitionOuter :: (Filterable f, Decide g) => f (g (a + b)) -> f (g a) × f (g b)
 partitionOuter = partition . fmap decide
 
 instance Filterable m => Filterable (StateT s m)

@@ -1,5 +1,7 @@
 module Optics.Types where
 
+import MyPrelude
+
 import Data.Profunctor
 import Profunctor.Mux
 

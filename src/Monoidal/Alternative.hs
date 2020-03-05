@@ -15,7 +15,7 @@ import Monoidal.BaseFunctor
 
 class Functor f => Alt f
   where
-  (<|>) :: f a -> f b -> f (Either a b)
+  (<|>) :: f a -> f b -> f (a + b)
 
 class Alt f => Alternative f
   where

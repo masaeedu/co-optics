@@ -11,7 +11,7 @@ import Monoidal.Applicative
 
 class Profunctor p => Mux p
   where
-  (/\) :: p a b -> p c d -> p (a, c) (b, d)
+  (/\) :: p a b -> p c d -> p (a × c) (b × d)
 
 infixr 4 /\
 
