@@ -109,7 +109,10 @@ among :: Eq a => [a] -> Prism' a a
 among as = predicate (`elem` as)
 
 _Just :: Prism (Maybe a) (Maybe b) a b
-_Just = prism Just (maybe (Left Nothing) Right)
+_Just = gsop . right'
+
+_Nothing :: Prism' (Maybe a) ()
+_Nothing = gsop . left'
 
 c2d :: Prism' Char DecDigit
 c2d = convert charDecimal
