@@ -16,9 +16,6 @@ import Profunctor.Lazy
 
 import Optics.Types
 import Optics.Iso
-import Optics.Reverse
-
-import SOP.EOT
 
 newtype Bazaar a b s t = Bazaar { runBazaar :: forall f. (Applicative f, Monad f) => (a -> f b) -> s -> f t }
 
