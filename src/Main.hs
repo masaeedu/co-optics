@@ -9,6 +9,6 @@ import Examples.Bigeneration
 
 main :: IO ()
 main = do
-  testBigeneration
+  -- testBigeneration
   testBiparsing
   -- miscCoprismStuff

@@ -28,7 +28,7 @@ data JSON = JSON { lpad :: Whitespace, val :: Value, rpad :: Whitespace }
 instance SOP.Generic JSON
 
 -- Parse/print a JSON document
-json :: Biparser' Maybe JSON
+json :: BP' JSON
 json = gsop $
   jsonWhitespace /\
   jsonValue      /\
@@ -39,7 +39,7 @@ data SpaceChar = Space | LF | CR | Tab
 instance SOP.Generic SpaceChar
 
 -- Parse/print a character representing a space in a JSON document
-jsonSpaceChar :: Biparser' Maybe SpaceChar
+jsonSpaceChar :: BP' SpaceChar
 jsonSpaceChar = gsop $
   token_ " "  \/
   token_ "\n" \/
@@ -49,16 +49,16 @@ jsonSpaceChar = gsop $
 type Whitespace = [SpaceChar]
 
 -- Parse/print some whitespace in a JSON document
-jsonWhitespace :: Biparser' Maybe Whitespace
-jsonWhitespace = many jsonSpaceChar
+jsonWhitespace :: BP' Whitespace
+jsonWhitespace = orElse "whitespace" $ many jsonSpaceChar
 
 data Value = N Number | S String | B Bool | Null | O Object | A Array
   deriving (Generic, Show)
 instance SOP.Generic Value
 
 -- Parse/print a JSON value (without leading/trailing whitespace)
-jsonValue :: Biparser' Maybe Value
-jsonValue = gsop $
+jsonValue :: BP' Value
+jsonValue = orElse "json value" $ gsop $
   jsonNumber \/
   jsonString \/
   jsonBool   \/
@@ -71,14 +71,14 @@ data Number = Number { whole :: Int, fraction :: Maybe Natural, exponent :: Mayb
 instance SOP.Generic Number
 
 -- Parse/print a JSON number
-jsonNumber :: Biparser' Maybe Number
-jsonNumber = gsop $
+jsonNumber :: BP' Number
+jsonNumber = orElse "number" $ gsop $
   int                         /\
   perhaps (token_ "." \\ nat) /\
   perhaps (token_ "E" \\ int)
 
 -- Parse/print a normal character in a JSON string (anything but quotes or backslashes)
-jsonNChar :: Biparser' Maybe Char
+jsonNChar :: BP' Char
 jsonNChar = re (predicate (\c -> c /= '\\' && c /= '"')) anychar
 
 -- Special characters which need to be escaped with backslashes
@@ -90,19 +90,20 @@ specialVsNormal :: Iso' Char (Escape + Char)
 specialVsNormal = distinguish isSpecial . firstIso (convert _Wrapped)
 
 -- Parse/print the escape code of a special character
-jsonEscapeCode :: Biparser' Maybe Char
+jsonEscapeCode :: BP' Char
 jsonEscapeCode = re (predicate isSpecial) $ asEscapeCode $ convert _Unwrapped $ anychar
 
 -- Parse/print an escaped special character in a JSON string
-jsonSChar :: Biparser' Maybe Escape
+jsonSChar :: BP' Escape
 jsonSChar =
   token_ "\\"
   \\
     convert _Unwrapped jsonEscapeCode
 
 -- Parse/print a JSON string
-jsonString :: Biparser' Maybe String
+jsonString :: BP' String
 jsonString =
+  orElse "string" $
   token_ "\""
   \\
     (many $ specialVsNormal $ jsonSChar \/ jsonNChar)
@@ -110,22 +111,22 @@ jsonString =
   token_ "\""
 
 -- Parse/print a JSON boolean
-jsonBool :: Biparser' Maybe Bool
-jsonBool = gsop $
+jsonBool :: BP' Bool
+jsonBool = orElse "bool" $ gsop $
   token_ "true"  \/
   token_ "false"
 
 -- Parse/print a JSON null
-jsonNull :: Biparser' Maybe ()
-jsonNull = token_ "null"
+jsonNull :: BP' ()
+jsonNull = orElse "null" $ token_ "null"
 
 data KeyValuePair = KeyValuePair { lead :: Whitespace, key :: String, sep :: Whitespace, value :: JSON }
   deriving (Generic, Show)
 instance SOP.Generic KeyValuePair
 
 -- Parse/print a JSON key value pair
-jsonKeyValuePair :: Biparser' Maybe KeyValuePair
-jsonKeyValuePair = gsop $
+jsonKeyValuePair :: BP' KeyValuePair
+jsonKeyValuePair = orElse "key value pair" $ gsop $
   jsonWhitespace /\
   jsonString     /\
   jsonWhitespace /\
@@ -136,8 +137,9 @@ jsonKeyValuePair = gsop $
 type Object = NonEmpty KeyValuePair + Whitespace
 
 -- Parse/print a JSON object
-jsonObject :: Biparser' Maybe Object
+jsonObject :: BP' Object
 jsonObject =
+  orElse "object" $
   token_ "{"
   \\
     token_ "," `separated` jsonKeyValuePair \/ jsonWhitespace
@@ -147,8 +149,9 @@ jsonObject =
 type Array = NonEmpty JSON + Whitespace
 
 -- Parse/print a JSON array
-jsonArray :: Biparser' Maybe Array
+jsonArray :: BP' Array
 jsonArray =
+  orElse "array" $
   token_ "["
   \\
     token_ "," `separated` (defer $ \_ -> json) \/ jsonWhitespace

@@ -28,6 +28,8 @@ type Parser    f   = Joker (StateT String f)
 type Printer   f   = Kleisli (WriterT String f)
 type Biparser  f   = Product (Parser f) (Printer f)
 type Biparser' f x = Biparser f x x
+type BP            = Biparser (Either [String])
+type BP'         x = BP x x
 
 biparser :: StateT String f o -> (i -> WriterT String f o) -> Biparser f i o
 biparser x y = Pair (Joker x) (Kleisli y)
@@ -44,31 +46,37 @@ biprint = (runWriterT .) . runKleisli . psnd
 biprint_ :: Functor f => Biparser f i o -> i -> f String
 biprint_ bp = fmap snd . biprint bp
 
-anychar :: Biparser' Maybe Char
+failure :: String -> BP a b
+failure e = biparser (StateT $ \_ -> Left [e]) (\_ -> WriterT $ Left [e])
+
+orElse :: String -> BP a b -> BP a b
+orElse e p = re runitE $ p \/ failure e
+
+anychar :: BP' Char
 anychar = biparser r w
   where
   r = get >>= \case { [] -> empty; (c : xs) -> c <$ put xs }
   w c = c <$ tell [c]
 
-char :: Char -> Biparser' Maybe Char
+char :: Char -> BP' Char
 char c = re (exactly c) anychar
 
-string :: String -> Biparser' Maybe String
+string :: String -> BP' String
 string s = bundle $ char <$> s
 
-token :: String -> x -> Biparser Maybe a x
+token :: String -> x -> BP a x
 token s x = dimap (const s) (const x) $ string s
 
-token_ :: String -> Biparser Maybe a ()
+token_ :: String -> BP a ()
 token_ s = token s ()
 
-trivial :: Biparser' Maybe ()
+trivial :: BP' ()
 trivial = start
 
-perhaps :: Biparser' Maybe x -> Biparser' Maybe (Maybe x)
+perhaps :: BP' x -> BP' (Maybe x)
 perhaps p = maybeToEither . symmE $ p \/ trivial
 
-sign :: Biparser' Maybe Bool
+sign :: BP' Bool
 sign = perhaps (char '-') & dimap sign2char char2sign
   where
   sign2char True = Nothing
@@ -77,13 +85,13 @@ sign = perhaps (char '-') & dimap sign2char char2sign
   char2sign (Just _) = False
   char2sign Nothing = True
 
-digit :: Biparser' Maybe DecDigit
+digit :: BP' DecDigit
 digit = re (convert charDecimal) $ anychar
 
-nat :: Biparser' Maybe Natural
+nat :: BP' Natural
 nat = re digitsAsNatural $ re _Just $ re listToNonEmpty $ many digit
 
-int :: Biparser' Maybe Int
+int :: BP' Int
 int = do
   s <- sign & lmap (\i -> i >= 0)
   n <- nat & lmap (intToNatural . abs)
@@ -92,5 +100,5 @@ int = do
     then i
     else -i
 
-hexDigit :: Biparser' Maybe HeXDigit
+hexDigit :: BP' HeXDigit
 hexDigit = re (convert charHeXaDeCiMaL) anychar
