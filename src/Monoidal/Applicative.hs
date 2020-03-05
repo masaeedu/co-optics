@@ -71,3 +71,6 @@ deriving via (BaseFunctor Gen) instance Applicative Gen
 
 deriving via (BaseFunctor NonEmpty) instance Apply NonEmpty
 deriving via (BaseFunctor NonEmpty) instance Applicative NonEmpty
+
+deriving via (BaseFunctor (Either e)) instance Apply (Either e)
+deriving via (BaseFunctor (Either e)) instance Applicative (Either e)

@@ -73,3 +73,5 @@ instance Filterable m => Filterable (WriterT w m)
     bwd = WriterT . fmap swap
 
 deriving via (Dynamic Gen) instance Filterable Gen
+
+deriving via (Dynamic (Either m)) instance Monoid m => Filterable (Either m)

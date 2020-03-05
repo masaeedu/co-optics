@@ -58,3 +58,13 @@ instance Alternative f => Alternative (WriterT s f)
 
 deriving via (BaseFunctor Gen) instance Alt Gen
 deriving via (BaseFunctor Gen) instance Alternative Gen
+
+instance Semigroup m => Alt (Either m)
+  where
+  Left x  <|> Left  y = Left $ x <> y
+  Left _  <|> Right x = Right $ Right x
+  Right x <|> _       = Right $ Left x
+
+instance Monoid m => Alternative (Either m)
+  where
+  empty = Left mempty
