@@ -19,9 +19,6 @@ infixr 5 \/
 discard :: a -> ()
 discard = const ()
 
-(\\//) :: Demux p => p a b -> p c b -> p (a + c) b
-x \\// y = rmap (either id id) $ x \/ y
-
 class Demux p => Switch p
   where
   stop :: p Void a
