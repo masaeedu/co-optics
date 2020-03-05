@@ -62,5 +62,13 @@ maybeToEither = iso (maybe (Left ()) Right) (either (const Nothing) Just)
 listToNonEmpty :: Iso [a] [b] (Maybe (NonEmpty a)) (Maybe (NonEmpty b))
 listToNonEmpty = gsop . re maybeToEither . mapIso (re gsop)
 
-unconsNonEmpty :: Iso (NonEmpty a) (NonEmpty b) ((a × NonEmpty a) + a) ((b × NonEmpty b) + b)
-unconsNonEmpty = mapIso runitT >>> ldistribT >>> mapIso (symmE >>> maybeToEither >>> listToNonEmpty) >>> gsop
+unconsNonEmpty :: Iso (NonEmpty a) (NonEmpty b) (a × NonEmpty a + a) (b × NonEmpty b + b)
+unconsNonEmpty =   --    NonEmpty a
+  gsop             -- -> a × [a]
+  . mapIso             --    [a]
+    ( listToNonEmpty   -- -> Maybe (NonEmpty a)
+    . maybeToEither    -- -> () + NonEmpty a
+    . symmE            -- -> NonEmpty a + ()
+    )             -- -> a × (NonEmpty a + ())
+  . ldistribT     -- -> (a × NonEmpty a) + (a × ())
+  . mapIso runitT -- -> (a × NonEmpty a) + a
