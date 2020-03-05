@@ -79,7 +79,7 @@ jsonNumber = gsop $
 
 -- Parse/print a normal character in a JSON string (anything but quotes or backslashes)
 jsonNChar :: Biparser' Maybe Char
-jsonNChar = re (predicate (\c -> c /= '\\' && c /= '"')) char
+jsonNChar = re (predicate (\c -> c /= '\\' && c /= '"')) anychar
 
 -- Special characters which need to be escaped with backslashes
 isSpecial :: Char -> Bool
@@ -91,7 +91,7 @@ specialVsNormal = distinguish isSpecial . firstIso (convert _Wrapped)
 
 -- Parse/print the escape code of a special character
 jsonEscapeCode :: Biparser' Maybe Char
-jsonEscapeCode = re (predicate isSpecial) $ asEscapeCode $ convert _Unwrapped $ char
+jsonEscapeCode = re (predicate isSpecial) $ asEscapeCode $ convert _Unwrapped $ anychar
 
 -- Parse/print an escaped special character in a JSON string
 jsonSChar :: Biparser' Maybe Escape

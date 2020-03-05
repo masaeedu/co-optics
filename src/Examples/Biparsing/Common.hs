@@ -44,14 +44,17 @@ biprint = (runWriterT .) . runKleisli . psnd
 biprint_ :: Functor f => Biparser f i o -> i -> f String
 biprint_ bp = fmap snd . biprint bp
 
-char :: Biparser' Maybe Char
-char = biparser r w
+anychar :: Biparser' Maybe Char
+anychar = biparser r w
   where
   r = get >>= \case { [] -> empty; (c : xs) -> c <$ put xs }
   w c = c <$ tell [c]
 
+char :: Char -> Biparser' Maybe Char
+char c = re (exactly c) anychar
+
 string :: String -> Biparser' Maybe String
-string s = re (exactly s) $ bundle $ replicate (length s) char
+string s = bundle $ char <$> s
 
 token :: String -> x -> Biparser Maybe a x
 token s x = dimap (const s) (const x) $ string s
@@ -66,7 +69,7 @@ perhaps :: Biparser' Maybe x -> Biparser' Maybe (Maybe x)
 perhaps p = maybeToEither . symmE $ p \/ trivial
 
 sign :: Biparser' Maybe Bool
-sign = perhaps (re (exactly '-') char) & dimap sign2char char2sign
+sign = perhaps (char '-') & dimap sign2char char2sign
   where
   sign2char True = Nothing
   sign2char False = Just '-'
@@ -75,7 +78,7 @@ sign = perhaps (re (exactly '-') char) & dimap sign2char char2sign
   char2sign Nothing = True
 
 digit :: Biparser' Maybe DecDigit
-digit = re (convert charDecimal) $ char
+digit = re (convert charDecimal) $ anychar
 
 nat :: Biparser' Maybe Natural
 nat = re digitsAsNatural $ re _Just $ re listToNonEmpty $ many digit
@@ -90,4 +93,4 @@ int = do
     else -i
 
 hexDigit :: Biparser' Maybe HeXDigit
-hexDigit = re (convert charHeXaDeCiMaL) char
+hexDigit = re (convert charHeXaDeCiMaL) anychar
