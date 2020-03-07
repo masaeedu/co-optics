@@ -2,13 +2,13 @@ module Examples.Misc where
 
 import MyPrelude
 
-import Data.Profunctor (Profunctor(..))
+import Data.Profunctor
 import Data.Map.Strict (Map, fromList)
 import Control.Monad.State.Lazy
 
-import Optics
-
 import Monoidal.Applicative
+
+import Optics
 
 miscCoprismStuff :: IO ()
 miscCoprismStuff = do
@@ -62,3 +62,14 @@ miscCoprismStuff = do
           do
             s <- get
             pure $ read s -- Nothing
+
+  let
+    focus :: Prism' (Maybe (a + String)) String
+    focus = _Just . right' . predicate ((< 7) . length)
+
+  print $ re focus `whittle` -- ["Hello!"]
+    [ Just $ Right $ "Hello!"
+    , Nothing
+    , Just $ Left $ -1
+    , Just $ Right $ "Whoops!"
+    ]
