@@ -50,8 +50,14 @@ anychar = biparser r w
   r = get >>= \case { [] -> empty; (c : xs) -> c <$ put xs }
   w c = c <$ tell [c]
 
+satisfy :: (a -> Bool) -> Biparser' Maybe a -> Biparser' Maybe a
+satisfy p = re (predicate p)
+
 char :: Char -> Biparser' Maybe Char
 char c = re (exactly c) anychar
+
+besides :: String -> Biparser' Maybe Char
+besides s = satisfy (not . (`elem` s)) $ anychar
 
 string :: String -> Biparser' Maybe String
 string s = bundle $ char <$> s
@@ -62,8 +68,11 @@ token s x = dimap (const s) (const x) $ string s
 token_ :: String -> Biparser Maybe a ()
 token_ s = token s ()
 
-trivial :: Biparser' Maybe ()
+trivial :: Biparser Maybe a ()
 trivial = start
+
+eof :: Biparser Maybe a ()
+eof = re right' $ anychar \/ trivial
 
 perhaps :: Biparser' Maybe x -> Biparser' Maybe (Maybe x)
 perhaps p = maybeToEither . symmE $ p \/ trivial
