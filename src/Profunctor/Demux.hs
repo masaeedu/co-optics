@@ -4,11 +4,13 @@ import MyPrelude
 
 import Data.Profunctor
 import Data.Bifunctor.Product
+import Data.Bifunctor (Bifunctor(..))
 import Data.Void
 
 import Profunctor.Joker
 import Profunctor.Kleisli
 import Monoidal.Alternative
+import Monoidal.Decisive
 
 class Profunctor p => Demux p
   where
@@ -46,3 +48,11 @@ instance (Demux p, Demux q) => Demux (Product p q)
 instance (Switch p, Switch q) => Switch (Product p q)
   where
   stop = Pair stop stop
+
+instance Decide f => Demux (Costar f)
+  where
+  Costar f \/ Costar g = Costar $ decide >>> bimap f g
+
+instance Decisive f => Switch (Costar f)
+  where
+  stop = Costar $ absurd . vow
