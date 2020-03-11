@@ -72,8 +72,8 @@ type ThreeDigitNumber =
 linenumber :: Biparser' Maybe ThreeDigitNumber
 linenumber =
   (               digit /\ digit /\ digit) \/ -- Three digits, or
-  (token_ " "  \\ digit /\ digit         ) \/ -- ... a space and two digits, or
-  (token_ "  " \\ digit                  )    -- ... two spaces and a digit
+  (token_ " "  \\          digit /\ digit) \/ -- ... a space and two digits, or
+  (token_ "  " \\                   digit)    -- ... two spaces and a digit
 
 data EOL = LF | CRLF
   deriving (Generic, Show)
