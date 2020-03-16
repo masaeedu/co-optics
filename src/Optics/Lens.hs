@@ -3,6 +3,7 @@ module Optics.Lens (module Optics.Lens, module Optics.Types) where
 import MyPrelude
 
 import Data.Profunctor
+import Data.Void
 
 import Monoidal.Applicative
 import Profunctor.Demux
@@ -25,6 +26,10 @@ instance Demux (Shop a b)
   where
   Shop v1 u1 \/ Shop v2 u2 = Shop (either v1 v2) (either ((Left .) . u1) ((Right .) . u2))
 
+instance Switch (Shop a b)
+  where
+  stop = Shop absurd absurd
+
 toLens :: Shop a b s t -> Lens s t a b
 toLens (Shop v u) = lens v u
 
@@ -45,3 +50,6 @@ liftLens l = lens (fmap $ view l) (liftA2 $ update l)
 
 altLens :: Lens s t a b -> Lens s' t' a b -> Lens (s + s') (t + t') a b
 altLens (fromLens -> s1) (fromLens -> s2) = toLens $ s1 \/ s2
+
+emptyLens :: Lens Void Void a b
+emptyLens = toLens stop
