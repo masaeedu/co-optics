@@ -5,6 +5,7 @@ import MyPrelude
 
 import Data.Profunctor
 import Data.List.NonEmpty (NonEmpty)
+import Data.Void
 
 import Control.Monad
 
@@ -49,6 +50,14 @@ instance Mux (Bazaar a b)
 instance Visitor (Bazaar a b)
   where
   start = Bazaar $ \_ _ -> pure ()
+
+instance Demux (Bazaar a b)
+  where
+  Bazaar x \/ Bazaar y = Bazaar $ \f -> either (fmap Left . x f) (fmap Right . y f)
+
+instance Switch (Bazaar a b)
+  where
+  stop = Bazaar $ \_ -> absurd
 
 instance Functor (Bazaar a b s)
   where
