@@ -77,6 +77,9 @@ liftPrism p = prism (fmap $ build p) (decide . fmap (match p))
 zipPrism :: Prism s t a b -> Prism s' t' a b -> Prism (s × s') (t × t') a b
 zipPrism (fromPrism -> m1) (fromPrism -> m2) = toPrism $ m1 /\ m2
 
+defaultPrism :: Prism x () a b
+defaultPrism = toPrism start
+
 predicate :: (a -> Bool) -> Prism' a a
 predicate f = prism id (\x -> if f x then Right x else Left x)
 
