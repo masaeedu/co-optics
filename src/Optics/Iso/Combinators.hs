@@ -16,18 +16,24 @@ exch_id = Exchange id id
 exch_compose :: Exchange c d e f -> Exchange a b c d -> Exchange a b e f
 exch_compose (Exchange f1 b1) (Exchange f2 b2) = Exchange  (f2 . f1) (b1 . b2)
 
-instance Profunctor (Exchange a b)
-  where
-  dimap f g (Exchange a b) = Exchange (a . f) (g . b)
-
 iso :: (s -> a) -> (b -> t) -> Iso s t a b
 iso = dimap
+
+toIso :: Exchange a b s t -> Iso s t a b
+toIso (Exchange f b) = iso f b
+
+fromIso :: Iso s t a b -> Exchange a b s t
+fromIso i = i exch_id
 
 fwd :: Iso s t a b -> s -> a
 fwd f = _fwd (f exch_id)
 
 bwd :: Iso s t a b -> b -> t
 bwd f = _bwd (f exch_id)
+
+instance Profunctor (Exchange a b)
+  where
+  dimap f g (Exchange a b) = Exchange (a . f) (g . b)
 
 isoId :: Iso s a s a
 isoId = iso id id
