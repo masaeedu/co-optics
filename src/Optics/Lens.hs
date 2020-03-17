@@ -51,5 +51,5 @@ liftLens l = lens (fmap $ view l) (liftA2 $ update l)
 altLens :: Lens s t a b -> Lens s' t' a b -> Lens (s + s') (t + t') a b
 altLens (fromLens -> s1) (fromLens -> s2) = toLens $ s1 \/ s2
 
-emptyLens :: Lens Void Void a b
+emptyLens :: Lens Void x a b
 emptyLens = toLens stop
