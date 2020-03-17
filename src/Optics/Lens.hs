@@ -14,6 +14,9 @@ data Shop a b s t = Shop { _view :: s -> a, _update :: s -> b -> t }
 shp_id :: Shop a b a b
 shp_id = Shop id (const id)
 
+shp_compose :: Shop c d e f -> Shop a b c d -> Shop a b e f
+shp_compose (Shop v1 u1) (Shop v2 u2) = Shop (v2 . v1) (\e b -> u1 e $ u2 (v1 e) b)
+
 lens :: (s -> a) -> (s -> b -> t) -> Lens s t a b
 lens v u = dimap (\s -> (s, v s)) (uncurry u) . second'
 
