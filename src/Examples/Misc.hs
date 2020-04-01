@@ -62,3 +62,11 @@ miscCoprismStuff = do
           do
             s <- get
             pure $ read s -- Nothing
+
+  -- Testing traversals
+  print $ "----------------------------------------"
+  let
+    t :: Traversal [a] [b] a b
+    t = wander (\f xs -> case xs of { [] -> pure []; (x : _) -> pure <$> f x })
+  void $ traverseOf t print [1, 2, 3, 4]
+  void $ traverseOf t print ([] :: [Int])

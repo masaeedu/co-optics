@@ -11,4 +11,4 @@ main :: IO ()
 main = do
   testBigeneration
   testBiparsing
-  -- miscCoprismStuff
+  miscCoprismStuff
