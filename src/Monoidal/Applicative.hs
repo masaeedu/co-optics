@@ -4,6 +4,9 @@ import MyPrelude
 
 import qualified Control.Applicative as A
 
+import Data.Functor.Identity
+import Data.Functor.Compose
+import Data.Functor.Const
 import Data.Bifunctor
 
 import Data.List.NonEmpty (NonEmpty(..))
@@ -74,3 +77,22 @@ deriving via (BaseFunctor NonEmpty) instance Applicative NonEmpty
 
 deriving via (BaseFunctor (Either e)) instance Apply (Either e)
 deriving via (BaseFunctor (Either e)) instance Applicative (Either e)
+
+instance Semigroup a => Apply (Const a)
+  where
+  zip (Const x) (Const y) = Const $ x <> y
+
+instance Monoid a => Applicative (Const a)
+  where
+  pure _ = Const mempty
+
+deriving via (BaseFunctor Identity) instance Apply Identity
+deriving via (BaseFunctor Identity) instance Applicative Identity
+
+instance (Apply f, Apply g) => Apply (Compose f g)
+  where
+  zip (Compose f) (Compose g) = Compose $ fmap (uncurry zip) $ zip f g
+
+instance (Applicative f, Applicative g) => Applicative (Compose f g)
+  where
+  pure = Compose . pure . pure
