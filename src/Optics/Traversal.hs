@@ -7,8 +7,6 @@ import Data.Profunctor
 import Data.List.NonEmpty (NonEmpty)
 import Data.Void
 
-import Control.Monad
-
 import Monoidal.Applicative
 
 import Profunctor.Mux
@@ -18,18 +16,13 @@ import Profunctor.Lazy
 import Optics.Types
 import Optics.Iso
 
-newtype Bazaar a b s t = Bazaar { runBazaar :: forall f. (Applicative f, Monad f) => (a -> f b) -> s -> f t }
+newtype Bazaar a b s t = Bazaar { runBazaar :: forall f. Applicative f => (a -> f b) -> s -> f t }
 
 bz_id :: Bazaar a b a b
 bz_id = Bazaar id
 
 bz_compose :: Bazaar c d e f -> Bazaar a b c d -> Bazaar a b e f
 bz_compose (Bazaar x) (Bazaar y) = Bazaar $ x . y
-
-instance Category (Bazaar a b)
-  where
-  id = Bazaar $ const pure
-  Bazaar f . Bazaar g = Bazaar $ \afb -> f afb <=< g afb
 
 instance Profunctor (Bazaar a b)
   where
@@ -58,6 +51,10 @@ instance Demux (Bazaar a b)
 instance Switch (Bazaar a b)
   where
   stop = Bazaar $ \_ -> absurd
+
+instance Lazy (Bazaar a b s t)
+  where
+  defer b = Bazaar $ \f -> runBazaar (b ()) f
 
 instance Functor (Bazaar a b s)
   where
