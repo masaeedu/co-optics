@@ -41,7 +41,7 @@ singleton :: x -> Bazaar x y y
 singleton x = B $ \f -> f x
 
 sequenceA' :: Applicative f => Bazaar (f a) x t -> f (Bazaar a x t)
-sequenceA' (B b) = getCompose . b $ \x -> Compose $ fmap singleton $ x
+sequenceA' (B b) = getCompose . b $ \fa -> Compose $ fmap singleton $ fa
 
 foldMap' :: Monoid m => (a -> m) -> Bazaar a x t -> m
 foldMap' f (B b) = getConst $ b $ Const . f
@@ -118,4 +118,4 @@ wander :: (forall f. Applicative f => (a -> f b) -> s -> f t) -> Traversal s t a
 wander b = fl2t $ BTraversal b
 
 traverseOf :: Traversal s t a b -> (forall f. Applicative f => (a -> f b) -> s -> f t)
-traverseOf b = case t2fl b of (BTraversal b) -> b
+traverseOf b = case t2fl b of (BTraversal b') -> b'
