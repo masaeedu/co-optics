@@ -40,8 +40,14 @@ more a (B b) = B $ \f -> flip ($) <$> f a <*> b f
 singleton :: x -> Bazaar x y y
 singleton x = B $ \f -> f x
 
+fmap' :: (a -> b) -> Bazaar a x t -> Bazaar b x t
+fmap' f (B b) = B $ b . (. f)
+
 sequenceA' :: Applicative f => Bazaar (f a) x t -> f (Bazaar a x t)
 sequenceA' (B b) = getCompose . b $ \fa -> Compose $ fmap singleton $ fa
+
+traverse' :: Applicative f => (a -> f b) -> Bazaar a x t -> f (Bazaar b x t)
+traverse' f = sequenceA' . fmap' f
 
 foldMap' :: Monoid m => (a -> m) -> Bazaar a x t -> m
 foldMap' f (B b) = getConst $ b $ Const . f
