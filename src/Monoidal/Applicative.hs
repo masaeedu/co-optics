@@ -66,6 +66,9 @@ instance (Applicative m, Monoid w) => Applicative (WriterT w m)
   where
   pure a = WriterT $ fmap (, mempty) $ pure a
 
+deriving via (BaseFunctor ((->) x)) instance Apply ((->) x)
+deriving via (BaseFunctor ((->) x)) instance Applicative ((->) x)
+
 deriving via (BaseFunctor IO) instance Apply IO
 deriving via (BaseFunctor IO) instance Applicative IO
 
