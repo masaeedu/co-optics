@@ -75,7 +75,7 @@ TODO:
 -}
 
 inn :: Unfun a b t -> Bazaar a b t
-inn (Left t) = done t
+inn (Left t)        = done t
 inn (Right (a, as)) = more a as
 
 unfun :: Iso (Bazaar a b t) (Bazaar a' b' t') (Unfun a b t) (Unfun a' b' t')
@@ -118,5 +118,4 @@ wander :: (forall f. Applicative f => (a -> f b) -> s -> f t) -> Traversal s t a
 wander b = fl2t $ BTraversal b
 
 traverseOf :: Traversal s t a b -> (forall f. Applicative f => (a -> f b) -> s -> f t)
-traverseOf b = case t2fl b of
-  (BTraversal b) -> b
+traverseOf b = case t2fl b of (BTraversal b) -> b
