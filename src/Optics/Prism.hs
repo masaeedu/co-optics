@@ -56,7 +56,8 @@ instance Profunctor (Market a b)
   where
   dimap f g (Market b m) = Market (g . b) (first g . m . f)
 
-instance Choice (Market a b) where
+instance Choice (Market a b)
+  where
   left' (Market b m) = Market (Left . b) (fwd assocE . second (fwd symmE) . fwd (re assocE) . first m)
 
 instance Mux (Market a b)
