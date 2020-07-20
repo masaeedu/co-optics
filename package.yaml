@@ -21,6 +21,8 @@ dependencies:
   - generic-lens
   - generics-sop
 
+  - monoidal
+
 ghc-options: [-Wall, -fconstraint-solver-iterations=20]
 default-extensions:
   - GADTs
