@@ -1,8 +1,6 @@
 {-# LANGUAGE DeriveGeneric, ViewPatterns #-}
 module Optics.Prism (module Optics.Prism, module Optics.Types) where
 
-import MyPrelude
-
 import GHC.Generics
 import GHC.Natural
 import Data.Char

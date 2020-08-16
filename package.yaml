@@ -54,7 +54,7 @@ default-extensions:
 
   - TupleSections
 
-  - NoImplicitPrelude
+  - PackageImports
 
 library: {}
 executable:

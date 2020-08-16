@@ -1,7 +1,5 @@
 module Optics.Common where
 
-import MyPrelude
-
 import Data.Functor.Identity
 import Data.Profunctor
 

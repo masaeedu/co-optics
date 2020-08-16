@@ -3,7 +3,7 @@ module Profunctor.Joker
   )
   where
 
-import MyPrelude
+import qualified "base" Prelude as P
 
 import Data.Profunctor (Cochoice(..), Costrong(..))
 import Data.Bifunctor.Joker (Joker(..))

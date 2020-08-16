@@ -1,8 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 module Examples.Biparsing where
 
-import MyPrelude
-
 import GHC.Natural (Natural, intToNatural, naturalToInt)
 
 import Data.Profunctor (Profunctor(..))

@@ -1,8 +1,6 @@
 {-# LANGUAGE DeriveFunctor, DeriveGeneric, LambdaCase #-}
 module Examples.Biparsing.DXF where
 
-import MyPrelude
-
 import GHC.Generics
 
 import Data.List (intercalate)

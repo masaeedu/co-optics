@@ -1,7 +1,5 @@
 module Optics.Iso.Combinators where
 
-import MyPrelude
-
 import Data.Profunctor
 import Data.Bifunctor
 

@@ -4,8 +4,6 @@ module Profunctor.Product
   )
   where
 
-import MyPrelude
-
 import Data.Bifunctor.Product
 
 import Monoidal.Applicative

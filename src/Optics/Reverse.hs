@@ -1,7 +1,5 @@
 module Optics.Reverse (module Optics.Reverse, module Optics.Types) where
 
-import MyPrelude
-
 import Profunctor.Re
 
 import Optics.Types

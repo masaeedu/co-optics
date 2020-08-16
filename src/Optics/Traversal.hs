@@ -1,8 +1,6 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 module Optics.Traversal (module Optics.Traversal, module Optics.Types, module B) where
 
-import MyPrelude
-
 import Data.Profunctor
 import Data.List.NonEmpty (NonEmpty)
 import Data.Void

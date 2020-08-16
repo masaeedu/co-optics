@@ -1,7 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 module Profunctor.Muxable where
 
-import MyPrelude
 import Data.Profunctor
 
 import Profunctor.Mux

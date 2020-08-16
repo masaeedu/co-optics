@@ -1,8 +1,6 @@
 {-# LANGUAGE LambdaCase, EmptyCase, DeriveAnyClass, DeriveGeneric #-}
 module SOP.EOT where
 
-import MyPrelude
-
 import Data.Void
 import Data.Bifunctor
 

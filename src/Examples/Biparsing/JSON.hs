@@ -1,8 +1,6 @@
 {-# LANGUAGE LambdaCase, DeriveGeneric #-}
 module Examples.Biparsing.JSON where
 
-import MyPrelude hiding (exponent)
-
 import GHC.Generics
 import GHC.Natural
 

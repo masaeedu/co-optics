@@ -1,8 +1,6 @@
 {-# LANGUAGE LambdaCase, ViewPatterns, DeriveGeneric #-}
 module Examples.Biparsing.Common where
 
-import MyPrelude
-
 import GHC.Natural
 
 import Data.Profunctor

@@ -1,6 +1,6 @@
 module Profunctor.Kleisli where
 
-import MyPrelude
+import qualified "base" Prelude as P
 
 import Data.Profunctor (Profunctor (..), Strong(..), Choice(..), Cochoice(..))
 

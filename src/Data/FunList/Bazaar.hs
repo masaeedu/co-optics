@@ -1,8 +1,6 @@
 {-# LANGUAGE PatternSynonyms, ViewPatterns, LambdaCase #-}
 module Data.FunList.Bazaar where
 
-import MyPrelude
-
 import Data.Functor.Identity
 import Data.Functor.Compose
 import Data.Functor.Const

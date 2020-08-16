@@ -1,7 +1,5 @@
 module Profunctor.Lazy where
 
-import MyPrelude
-
 import Data.Bifunctor.Product
 
 import Profunctor.Kleisli

@@ -1,7 +1,5 @@
 module Examples.Misc where
 
-import MyPrelude
-
 import Data.Profunctor (Profunctor(..))
 import Data.Map.Strict (Map, fromList)
 import Control.Monad.State.Lazy

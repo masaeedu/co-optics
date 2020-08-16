@@ -1,8 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 module Optics.Iso (module Optics.Iso, module Optics.Iso.Combinators) where
 
-import MyPrelude
-
 import Data.Void
 import Data.Bifunctor
 import Data.List.NonEmpty (NonEmpty(..))

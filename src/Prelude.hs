@@ -1,4 +1,4 @@
-module MyPrelude
+module Prelude
   ( module P
   , module C
   , ifThenElse
@@ -9,7 +9,7 @@ module MyPrelude
   )
   where
 
-import Prelude as P hiding
+import "base" Prelude as P hiding
   ( Applicative(..)
   , zip
   , id
@@ -24,8 +24,8 @@ import Data.Function ((&))
 ifThenElse :: Bool -> a -> a -> a
 ifThenElse b x y = if b then x else y
 
-type x + y = Either x y
+type (+) = Either
 infixr 6 +
 
-type x × y = (x, y)
+type (×) = (,)
 infixr 7 ×
