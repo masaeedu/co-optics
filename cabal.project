@@ -3,5 +3,5 @@ packages: .
 source-repository-package
   type: git
   location: https://github.com/masaeedu/monoidal.git
-  tag: 5e56bee755b7c043ebe40c88774af9301846a7c8
-  --sha256: 1ky3q3zxw4z0j8dmln1h3wwvknbq2pdjdryjp08mzab784gyb4ha
+  tag: 5a58f5be8f80dba1fb9cacb2ce685d48facac6ec
+  --sha256: 1zmcbdbjzixa5zp02a31r83vsgfk7namk343g0mrdm8p9nydh395
