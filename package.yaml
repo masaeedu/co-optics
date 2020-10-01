@@ -6,9 +6,45 @@ license: MIT
 
 build-type: Simple
 
-source-dirs: src
 dependencies:
-  - { name: "base", version: ">=4.13 && <4.14" }
+- { name: "base", version: ">=4.13 && <4.14" }
+
+ghc-options: [-Wall, -fconstraint-solver-iterations=20]
+default-extensions:
+- GADTs
+
+- StandaloneDeriving
+- DeriveFunctor
+- DerivingVia
+- GeneralizedNewtypeDeriving
+
+- ScopedTypeVariables
+- RankNTypes
+- QuantifiedConstraints
+
+- TypeApplications
+- TypeOperators
+- MultiParamTypeClasses
+- TypeFamilies
+- FunctionalDependencies
+
+- ConstraintKinds
+- DataKinds
+- PolyKinds
+- KindSignatures
+
+- UndecidableInstances
+- FlexibleInstances
+- FlexibleContexts
+- DefaultSignatures
+
+- TupleSections
+
+- PackageImports
+
+library:
+  source-dirs: src
+  dependencies:
   - profunctors
   - bifunctors
   - containers
@@ -20,42 +56,10 @@ dependencies:
   - lens
   - generic-lens
   - generics-sop
-
   - monoidal
 
-ghc-options: [-Wall, -fconstraint-solver-iterations=20]
-default-extensions:
-  - GADTs
-
-  - StandaloneDeriving
-  - DeriveFunctor
-  - DerivingVia
-  - GeneralizedNewtypeDeriving
-
-  - ScopedTypeVariables
-  - RankNTypes
-  - QuantifiedConstraints
-
-  - TypeApplications
-  - TypeOperators
-  - MultiParamTypeClasses
-  - TypeFamilies
-  - FunctionalDependencies
-
-  - ConstraintKinds
-  - DataKinds
-  - PolyKinds
-  - KindSignatures
-
-  - UndecidableInstances
-  - FlexibleInstances
-  - FlexibleContexts
-  - DefaultSignatures
-
-  - TupleSections
-
-  - PackageImports
-
-library: {}
 executable:
+  source-dirs: app
   main: Main.hs
+  dependencies:
+  - co-optics
