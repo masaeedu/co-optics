@@ -1,8 +1,8 @@
-module Optics.Reverse (module Optics.Reverse, module Optics.Types) where
+module Optics.Reverse where
 
-import Profunctor.Re
-
+import Data.Biprofunctor.Upstream (Upstream(..))
+import qualified Control.Category.Product as CP
 import Optics.Types
 
-re :: Optic (Re p a b) s t a b -> Optic p b a t s
-re p = runRe $ p $ Re id
+re :: Optic (Upstream (Optic p) a b) a b s t -> Optic p t s b a
+re (Optic o) = runUpstream $ o CP.biid
